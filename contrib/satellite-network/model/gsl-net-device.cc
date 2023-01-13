@@ -442,6 +442,19 @@ GSLNetDevice::GetAddress (void) const
   return m_address;
 }
 
+void
+GSLNetDevice::SetDstAddress (Address address)
+{
+  NS_LOG_FUNCTION (this << address);
+  m_dst_address = Mac48Address::ConvertFrom (address);
+}
+
+Address
+GSLNetDevice::GetDstAddress (void) const
+{
+  return m_dst_address;
+}
+
 bool
 GSLNetDevice::IsLinkUp (void) const
 {
@@ -467,7 +480,11 @@ Address
 GSLNetDevice::GetBroadcast (void) const
 {
   NS_LOG_FUNCTION (this);
-  throw std::runtime_error("Broadcast not supported (only ARP would use broadcast, whose cache should have already been filled).");
+  return GetDstAddress();
+  // return Mac48Address ("00:ff:ff:ff:ff:ff");
+  // NS_LOG_FUNCTION (this);
+  // // return m_address;
+  // throw std::runtime_error("Broadcast not supported (only ARP would use broadcast, whose cache should have already been filled).");
 }
 
 bool
@@ -641,6 +658,7 @@ GSLNetDevice::PppToEther (uint16_t proto)
     {
     case 0x0021: return 0x0800;   //IPv4
     case 0x0057: return 0x86DD;   //IPv6
+    case 0x0077: return 0x7777;   //NDN
     default: NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
     }
   return 0;
@@ -654,6 +672,7 @@ GSLNetDevice::EtherToPpp (uint16_t proto)
     {
     case 0x0800: return 0x0021;   //IPv4
     case 0x86DD: return 0x0057;   //IPv6
+    case 0x7777: return 0x0077;   //NDN
     default: NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
     }
   return 0;
