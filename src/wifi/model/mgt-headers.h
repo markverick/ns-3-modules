@@ -28,17 +28,17 @@
 #include "capability-information.h"
 #include "supported-rates.h"
 #include "ssid.h"
-#include "ns3/dsss-parameter-set.h"
+#include "dsss-parameter-set.h"
 #include "extended-capabilities.h"
-#include "ns3/ht-capabilities.h"
-#include "ns3/ht-operation.h"
-#include "ns3/vht-capabilities.h"
-#include "ns3/vht-operation.h"
-#include "ns3/erp-information.h"
+#include "ht-capabilities.h"
+#include "ht-operation.h"
+#include "vht-capabilities.h"
+#include "vht-operation.h"
+#include "erp-information.h"
 #include "edca-parameter-set.h"
-#include "ns3/he-capabilities.h"
-#include "ns3/he-operation.h"
-#include "ns3/mu-edca-parameter-set.h"
+#include "he-capabilities.h"
+#include "he-operation.h"
+#include "cf-parameter-set.h"
 
 namespace ns3 {
 
@@ -154,12 +154,11 @@ public:
    * \return The TypeId.
    */
   static TypeId GetTypeId (void);
-
-  TypeId GetInstanceTypeId (void) const override;
-  void Print (std::ostream &os) const override;
-  uint32_t GetSerializedSize (void) const override;
-  void Serialize (Buffer::Iterator start) const override;
-  uint32_t Deserialize (Buffer::Iterator start) override;
+  TypeId GetInstanceTypeId (void) const;
+  void Print (std::ostream &os) const;
+  uint32_t GetSerializedSize (void) const;
+  void Serialize (Buffer::Iterator start) const;
+  uint32_t Deserialize (Buffer::Iterator start);
 
 
 private:
@@ -401,12 +400,6 @@ public:
    */
   EdcaParameterSet GetEdcaParameterSet (void) const;
   /**
-   * Return the MU EDCA Parameter Set.
-   *
-   * \return the MU EDCA Parameter Set
-   */
-  MuEdcaParameterSet GetMuEdcaParameterSet (void) const;
-  /**
    * Set the Capability information.
    *
    * \param capabilities Capability information
@@ -473,12 +466,6 @@ public:
    */
   void SetEdcaParameterSet (EdcaParameterSet edcaParameterSet);
   /**
-   * Set the MU EDCA Parameter Set.
-   *
-   * \param muEdcaParameterSet the MU EDCA Parameter Set
-   */
-  void SetMuEdcaParameterSet (MuEdcaParameterSet muEdcaParameterSet);
-  /**
    * Set the HE capabilities.
    *
    * \param heCapabilities HE capabilities
@@ -517,7 +504,6 @@ private:
   EdcaParameterSet m_edcaParameterSet; //!< EDCA Parameter Set
   HeCapabilities m_heCapability; //!< HE capabilities
   HeOperation m_heOperation; //!< HE operation
-  MuEdcaParameterSet m_muEdcaParameterSet; //!< MU EDCA Parameter Set
 };
 
 
@@ -720,11 +706,11 @@ public:
    */
   EdcaParameterSet GetEdcaParameterSet (void) const;
   /**
-   * Return the MU EDCA Parameter Set.
+   * Return the CF parameter set.
    *
-   * \return the MU EDCA Parameter Set
+   * \return CF parameter set
    */
-  MuEdcaParameterSet GetMuEdcaParameterSet (void) const;
+  CfParameterSet GetCfParameterSet (void) const;
   /**
    * Set the Capability information.
    *
@@ -810,11 +796,11 @@ public:
    */
   void SetEdcaParameterSet (EdcaParameterSet edcaParameterSet);
   /**
-   * Set the MU EDCA Parameter Set.
+   * Set the CF parameter set.
    *
-   * \param muEdcaParameterSet the MU EDCA Parameter Set
+   * \param cfParameterSet CF parameter set
    */
-  void SetMuEdcaParameterSet (MuEdcaParameterSet muEdcaParameterSet);
+  void SetCfParameterSet (CfParameterSet cfParameterSet);
   /**
    * Return the time stamp.
    *
@@ -850,7 +836,7 @@ private:
   HeOperation m_heOperation;         //!< HE operation
   ErpInformation m_erpInformation;     //!< ERP information
   EdcaParameterSet m_edcaParameterSet; //!< EDCA Parameter Set
-  MuEdcaParameterSet m_muEdcaParameterSet; //!< MU EDCA Parameter Set
+  CfParameterSet m_cfParameterSet;     //!< CF parameter set
 };
 
 
@@ -1277,7 +1263,7 @@ public:
    * \return The TypeId.
    */
   static TypeId GetTypeId (void);
-
+  // Inherited
   TypeId GetInstanceTypeId (void) const;
   void Print (std::ostream &os) const;
   uint32_t GetSerializedSize (void) const;

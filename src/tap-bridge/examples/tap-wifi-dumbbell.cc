@@ -135,7 +135,7 @@ main (int argc, char *argv[])
   NodeContainer nodesLeft;
   nodesLeft.Create (4);
 
-  YansWifiPhyHelper wifiPhy;
+  YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
   wifiPhy.SetChannel (wifiChannel.Create ());
 

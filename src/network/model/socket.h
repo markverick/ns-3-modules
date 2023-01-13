@@ -250,11 +250,8 @@ public:
    *        This callback is intended to notify a socket that would
    *        have been blocked in a blocking socket model that data
    *        is available to be read.
-   * \param receivedData Callback for the event that data is received
-   *        from the underlying transport protocol.  This callback
-   *        is passed a pointer to the socket.
    */
-  void SetRecvCallback (Callback<void, Ptr<Socket> > receivedData);
+  void SetRecvCallback (Callback<void, Ptr<Socket> >);
   /** 
    * \brief Allocate a local endpoint for this socket.
    * \param address the address to try to allocate
@@ -620,6 +617,7 @@ public:
    * the socket can not receive any packets as a result.
    *
    * \param netdevice Pointer to NetDevice of desired interface
+   * \returns nothing
    */
   virtual void BindToNetDevice (Ptr<NetDevice> netdevice);
 
@@ -668,6 +666,7 @@ public:
    * it is enabled for all types of sockets that supports packet information
    *
    * \param flag Enable/Disable receive information
+   * \returns nothing
    */
   void SetRecvPktInfo (bool flag);
 

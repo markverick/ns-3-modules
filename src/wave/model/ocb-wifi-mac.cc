@@ -27,8 +27,7 @@
 #include "ns3/mac-rx-middle.h"
 #include "ns3/ht-capabilities.h"
 #include "ns3/vht-capabilities.h"
-#include "ns3/channel-access-manager.h"
-#include "wave-frame-exchange-manager.h"
+#include "wave-mac-low.h"
 #include "ocb-wifi-mac.h"
 #include "vendor-specific-action.h"
 #include "higher-tx-tag.h"
@@ -365,9 +364,6 @@ OcbWifiMac::ConfigureEdca (uint32_t cwmin, uint32_t cwmax, uint32_t aifsn, enum 
       dcf->SetMaxCw (cwmax);
       dcf->SetAifsn (aifsn);
       break;
-    case AC_BEACON:
-      // done by ApWifiMac
-      break;
     case AC_UNDEF:
       NS_FATAL_ERROR ("I don't know what to do with this");
       break;
@@ -375,10 +371,11 @@ OcbWifiMac::ConfigureEdca (uint32_t cwmin, uint32_t cwmax, uint32_t aifsn, enum 
 }
 
 void
-OcbWifiMac::ConfigureStandard (enum WifiStandard standard)
+OcbWifiMac::FinishConfigureStandard (enum WifiPhyStandard standard)
 {
   NS_LOG_FUNCTION (this << standard);
-  NS_ASSERT (standard == WIFI_STANDARD_80211p);
+  NS_ASSERT ((standard == WIFI_PHY_STANDARD_80211_10MHZ)
+             || (standard == WIFI_PHY_STANDARD_80211a));
 
   uint32_t cwmin = 15;
   uint32_t cwmax = 1023;
@@ -394,21 +391,6 @@ OcbWifiMac::ConfigureStandard (enum WifiStandard standard)
   ConfigureEdca (cwmin, cwmax, 3, AC_VI);
   ConfigureEdca (cwmin, cwmax, 6, AC_BE);
   ConfigureEdca (cwmin, cwmax, 9, AC_BK);
-
-  // Setup FrameExchangeManager
-  m_feManager = CreateObject<WaveFrameExchangeManager> ();
-  m_feManager->SetWifiMac (this);
-  m_feManager->SetMacTxMiddle (m_txMiddle);
-  m_feManager->SetMacRxMiddle (m_rxMiddle);
-  m_feManager->SetAddress (GetAddress ());
-  m_channelAccessManager->SetupFrameExchangeManager (m_feManager);
-  if (GetQosSupported ())
-    {
-      for (const auto& pair : m_edca)
-        {
-          pair.second->SetQosFrameExchangeManager (DynamicCast<QosFrameExchangeManager> (m_feManager));
-        }
-    }
 }
 
 
@@ -417,7 +399,7 @@ OcbWifiMac::Suspend (void)
 {
   NS_LOG_FUNCTION (this);
   m_channelAccessManager->NotifySleepNow ();
-  m_feManager->NotifySleepNow ();
+  m_low->NotifySleepNow ();
 }
 
 void
@@ -451,22 +433,23 @@ OcbWifiMac::Reset (void)
   NS_LOG_FUNCTION (this);
   // The switching event is used to notify MAC entity reset its operation.
   m_channelAccessManager->NotifySwitchingStartNow (Time (0));
-  m_feManager->NotifySwitchingStartNow (Time (0));
+  m_low->NotifySwitchingStartNow (Time (0));
 }
 
 void
 OcbWifiMac::EnableForWave (Ptr<WaveNetDevice> device)
 {
   NS_LOG_FUNCTION (this << device);
-  // To extend current OcbWifiMac for WAVE 1609.4, we shall use WaveFrameExchangeManager
-  StaticCast<WaveFrameExchangeManager> (m_feManager)->SetWaveNetDevice (device);
+  // To extend current OcbWifiMac for WAVE 1609.4, we shall use WaveMacLow instead of MacLow
+  m_low = CreateObject<WaveMacLow> ();
+  (DynamicCast<WaveMacLow> (m_low))->SetWaveNetDevice (device);
+  m_low->SetRxCallback (MakeCallback (&MacRxMiddle::Receive, m_rxMiddle));
+  m_channelAccessManager->SetupLow (m_low);
+  m_txop->SetMacLow (m_low);
+  for (EdcaQueues::iterator i = m_edca.begin (); i != m_edca.end (); ++i)
+    {
+      i->second->SetMacLow (m_low);
+      i->second->CompleteConfig ();
+    }
 }
-
-void
-OcbWifiMac::DoDispose (void)
-{
-  NS_LOG_FUNCTION (this);
-  RegularWifiMac::DoDispose ();
-}
-
 } // namespace ns3

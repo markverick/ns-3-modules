@@ -21,6 +21,7 @@
 #include "ns3/log.h"
 #include "ns3/abort.h"
 #include "ns3/queue-limits.h"
+#include "ns3/queue.h"
 #include "ns3/net-device-queue-interface.h"
 #include "ns3/uinteger.h"
 #include "ns3/pointer.h"
@@ -127,19 +128,73 @@ TrafficControlHelper::Default (std::size_t nTxQueues)
 }
 
 uint16_t
-TrafficControlHelper::DoSetRootQueueDisc (ObjectFactory factory)
+TrafficControlHelper::SetRootQueueDisc (std::string type,
+                                        std::string n01, const AttributeValue& v01,
+                                        std::string n02, const AttributeValue& v02,
+                                        std::string n03, const AttributeValue& v03,
+                                        std::string n04, const AttributeValue& v04,
+                                        std::string n05, const AttributeValue& v05,
+                                        std::string n06, const AttributeValue& v06,
+                                        std::string n07, const AttributeValue& v07,
+                                        std::string n08, const AttributeValue& v08,
+                                        std::string n09, const AttributeValue& v09,
+                                        std::string n10, const AttributeValue& v10,
+                                        std::string n11, const AttributeValue& v11,
+                                        std::string n12, const AttributeValue& v12,
+                                        std::string n13, const AttributeValue& v13,
+                                        std::string n14, const AttributeValue& v14,
+                                        std::string n15, const AttributeValue& v15)
 {
   NS_ABORT_MSG_UNLESS (m_queueDiscFactory.empty (), "A root queue disc has been already added to this factory");
+
+  ObjectFactory factory;
+  factory.SetTypeId (type);
+  factory.Set (n01, v01);
+  factory.Set (n02, v02);
+  factory.Set (n03, v03);
+  factory.Set (n04, v04);
+  factory.Set (n05, v05);
+  factory.Set (n06, v06);
+  factory.Set (n07, v07);
+  factory.Set (n08, v08);
+  factory.Set (n09, v09);
+  factory.Set (n10, v10);
+  factory.Set (n11, v11);
+  factory.Set (n12, v12);
+  factory.Set (n13, v13);
+  factory.Set (n14, v14);
+  factory.Set (n15, v15);
 
   m_queueDiscFactory.push_back (QueueDiscFactory (factory));
   return 0;
 }
 
 void
-TrafficControlHelper::DoAddInternalQueues (uint16_t handle, uint16_t count, ObjectFactory factory)
+TrafficControlHelper::AddInternalQueues (uint16_t handle, uint16_t count, std::string type,
+                                         std::string n01, const AttributeValue& v01,
+                                         std::string n02, const AttributeValue& v02,
+                                         std::string n03, const AttributeValue& v03,
+                                         std::string n04, const AttributeValue& v04,
+                                         std::string n05, const AttributeValue& v05,
+                                         std::string n06, const AttributeValue& v06,
+                                         std::string n07, const AttributeValue& v07,
+                                         std::string n08, const AttributeValue& v08)
 {
   NS_ABORT_MSG_IF (handle >= m_queueDiscFactory.size (), "A queue disc with handle "
                    << handle << " does not exist");
+
+  QueueBase::AppendItemTypeIfNotPresent (type, "QueueDiscItem");
+
+  ObjectFactory factory;
+  factory.SetTypeId (type);
+  factory.Set (n01, v01);
+  factory.Set (n02, v02);
+  factory.Set (n03, v03);
+  factory.Set (n04, v04);
+  factory.Set (n05, v05);
+  factory.Set (n06, v06);
+  factory.Set (n07, v07);
+  factory.Set (n08, v08);
 
   for (int i = 0; i < count; i++)
     {
@@ -148,19 +203,57 @@ TrafficControlHelper::DoAddInternalQueues (uint16_t handle, uint16_t count, Obje
 }
 
 void
-TrafficControlHelper::DoAddPacketFilter (uint16_t handle, ObjectFactory factory)
+TrafficControlHelper::AddPacketFilter (uint16_t handle, std::string type,
+                                       std::string n01, const AttributeValue& v01,
+                                       std::string n02, const AttributeValue& v02,
+                                       std::string n03, const AttributeValue& v03,
+                                       std::string n04, const AttributeValue& v04,
+                                       std::string n05, const AttributeValue& v05,
+                                       std::string n06, const AttributeValue& v06,
+                                       std::string n07, const AttributeValue& v07,
+                                       std::string n08, const AttributeValue& v08)
 {
   NS_ABORT_MSG_IF (handle >= m_queueDiscFactory.size (), "A queue disc with handle "
                    << handle << " does not exist");
+
+  ObjectFactory factory;
+  factory.SetTypeId (type);
+  factory.Set (n01, v01);
+  factory.Set (n02, v02);
+  factory.Set (n03, v03);
+  factory.Set (n04, v04);
+  factory.Set (n05, v05);
+  factory.Set (n06, v06);
+  factory.Set (n07, v07);
+  factory.Set (n08, v08);
 
   m_queueDiscFactory[handle].AddPacketFilter (factory);
 }
 
 TrafficControlHelper::ClassIdList
-TrafficControlHelper::DoAddQueueDiscClasses (uint16_t handle, uint16_t count, ObjectFactory factory)
+TrafficControlHelper::AddQueueDiscClasses (uint16_t handle, uint16_t count, std::string type,
+                                           std::string n01, const AttributeValue& v01,
+                                           std::string n02, const AttributeValue& v02,
+                                           std::string n03, const AttributeValue& v03,
+                                           std::string n04, const AttributeValue& v04,
+                                           std::string n05, const AttributeValue& v05,
+                                           std::string n06, const AttributeValue& v06,
+                                           std::string n07, const AttributeValue& v07,
+                                           std::string n08, const AttributeValue& v08)
 {
   NS_ABORT_MSG_IF (handle >= m_queueDiscFactory.size (), "A queue disc with handle "
                    << handle << " does not exist");
+
+  ObjectFactory factory;
+  factory.SetTypeId (type);
+  factory.Set (n01, v01);
+  factory.Set (n02, v02);
+  factory.Set (n03, v03);
+  factory.Set (n04, v04);
+  factory.Set (n05, v05);
+  factory.Set (n06, v06);
+  factory.Set (n07, v07);
+  factory.Set (n08, v08);
 
   ClassIdList list;
   uint16_t classId;
@@ -174,10 +267,43 @@ TrafficControlHelper::DoAddQueueDiscClasses (uint16_t handle, uint16_t count, Ob
 }
 
 uint16_t
-TrafficControlHelper::DoAddChildQueueDisc (uint16_t handle, uint16_t classId, ObjectFactory factory)
+TrafficControlHelper::AddChildQueueDisc (uint16_t handle, uint16_t classId, std::string type,
+                                         std::string n01, const AttributeValue& v01,
+                                         std::string n02, const AttributeValue& v02,
+                                         std::string n03, const AttributeValue& v03,
+                                         std::string n04, const AttributeValue& v04,
+                                         std::string n05, const AttributeValue& v05,
+                                         std::string n06, const AttributeValue& v06,
+                                         std::string n07, const AttributeValue& v07,
+                                         std::string n08, const AttributeValue& v08,
+                                         std::string n09, const AttributeValue& v09,
+                                         std::string n10, const AttributeValue& v10,
+                                         std::string n11, const AttributeValue& v11,
+                                         std::string n12, const AttributeValue& v12,
+                                         std::string n13, const AttributeValue& v13,
+                                         std::string n14, const AttributeValue& v14,
+                                         std::string n15, const AttributeValue& v15)
 {
   NS_ABORT_MSG_IF (handle >= m_queueDiscFactory.size (), "A queue disc with handle "
                    << handle << " does not exist");
+
+  ObjectFactory factory;
+  factory.SetTypeId (type);
+  factory.Set (n01, v01);
+  factory.Set (n02, v02);
+  factory.Set (n03, v03);
+  factory.Set (n04, v04);
+  factory.Set (n05, v05);
+  factory.Set (n06, v06);
+  factory.Set (n07, v07);
+  factory.Set (n08, v08);
+  factory.Set (n09, v09);
+  factory.Set (n10, v10);
+  factory.Set (n11, v11);
+  factory.Set (n12, v12);
+  factory.Set (n13, v13);
+  factory.Set (n14, v14);
+  factory.Set (n15, v15);
 
   uint16_t childHandle = static_cast<uint16_t>(m_queueDiscFactory.size ());
   m_queueDiscFactory.push_back (QueueDiscFactory (factory));
@@ -187,16 +313,55 @@ TrafficControlHelper::DoAddChildQueueDisc (uint16_t handle, uint16_t classId, Ob
 }
 
 TrafficControlHelper::HandleList
-TrafficControlHelper::DoAddChildQueueDiscs (uint16_t handle, const TrafficControlHelper::ClassIdList &classes,
-                                            ObjectFactory factory)
+TrafficControlHelper::AddChildQueueDiscs (uint16_t handle, const TrafficControlHelper::ClassIdList &classes,
+                                          std::string type,
+                                          std::string n01, const AttributeValue& v01,
+                                          std::string n02, const AttributeValue& v02,
+                                          std::string n03, const AttributeValue& v03,
+                                          std::string n04, const AttributeValue& v04,
+                                          std::string n05, const AttributeValue& v05,
+                                          std::string n06, const AttributeValue& v06,
+                                          std::string n07, const AttributeValue& v07,
+                                          std::string n08, const AttributeValue& v08,
+                                          std::string n09, const AttributeValue& v09,
+                                          std::string n10, const AttributeValue& v10,
+                                          std::string n11, const AttributeValue& v11,
+                                          std::string n12, const AttributeValue& v12,
+                                          std::string n13, const AttributeValue& v13,
+                                          std::string n14, const AttributeValue& v14,
+                                          std::string n15, const AttributeValue& v15)
 {
   HandleList list;
   for (ClassIdList::const_iterator c = classes.begin (); c != classes.end (); c++)
     {
-      uint16_t childHandle = DoAddChildQueueDisc (handle, *c, factory);
+      uint16_t childHandle = AddChildQueueDisc (handle, *c, type, n01, v01, n02, v02, n03, v03,
+                                                n04, v04, n05, v05, n06, v06, n07, v07, n08, v08, n09, v09,
+                                                n10, v10, n11, v11, n12, v12, n13, v13, n14, v14, n15, v15);
       list.push_back (childHandle);
     }
   return list;
+}
+
+void
+TrafficControlHelper::SetQueueLimits (std::string type,
+                                      std::string n01, const AttributeValue& v01,
+                                      std::string n02, const AttributeValue& v02,
+                                      std::string n03, const AttributeValue& v03,
+                                      std::string n04, const AttributeValue& v04,
+                                      std::string n05, const AttributeValue& v05,
+                                      std::string n06, const AttributeValue& v06,
+                                      std::string n07, const AttributeValue& v07,
+                                      std::string n08, const AttributeValue& v08)
+{
+  m_queueLimitsFactory.SetTypeId (type);
+  m_queueLimitsFactory.Set (n01, v01);
+  m_queueLimitsFactory.Set (n02, v02);
+  m_queueLimitsFactory.Set (n03, v03);
+  m_queueLimitsFactory.Set (n04, v04);
+  m_queueLimitsFactory.Set (n05, v05);
+  m_queueLimitsFactory.Set (n06, v06);
+  m_queueLimitsFactory.Set (n07, v07);
+  m_queueLimitsFactory.Set (n08, v08);
 }
 
 QueueDiscContainer

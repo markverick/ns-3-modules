@@ -45,7 +45,7 @@ private:
 std::string IsotropicAntennaModelTestCase::BuildNameString (Angles a)
 {
   std::ostringstream oss;
-  oss <<  "theta=" << a.GetInclination () << " , phi=" << a.GetAzimuth ();
+  oss <<  "theta=" << a.theta << " , phi=" << a.phi;
   return oss.str ();
 }
 

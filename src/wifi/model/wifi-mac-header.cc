@@ -39,12 +39,7 @@ enum
 /// subtype enumeration
 enum
 {
-  //Reserved: 0 - 1
-  SUBTYPE_CTL_TRIGGER = 2,
-  //Reserved: 3
-  SUBTYPE_CTL_BEAMFORMINGRPOLL = 4,
-  SUBTYPE_CTL_NDPANNOUNCE = 5,
-  SUBTYPE_CTL_CTLFRAMEEXT = 6,
+  //Reserved: 0 - 6
   SUBTYPE_CTL_CTLWRAPPER = 7,
   SUBTYPE_CTL_BACKREQ = 8,
   SUBTYPE_CTL_BACKRESP = 9,
@@ -56,24 +51,11 @@ enum
 };
 
 WifiMacHeader::WifiMacHeader ()
-  : m_ctrlMoreFrag (0),
-    m_ctrlRetry (0),
-    m_ctrlMoreData (0),
+  : m_ctrlMoreData (0),
     m_ctrlWep (0),
     m_ctrlOrder (0),
-    m_duration (0),
-    m_seqFrag (0),
-    m_seqSeq (0),
-    m_qosEosp (0),
-    m_qosAckPolicy (0),  // Normal Ack
     m_amsduPresent (0)
 {
-}
-
-WifiMacHeader::WifiMacHeader (WifiMacType type)
-  : WifiMacHeader ()
-{
-  SetType (type);
 }
 
 WifiMacHeader::~WifiMacHeader ()
@@ -133,10 +115,6 @@ WifiMacHeader::SetType (WifiMacType type, bool resetToDsFromDs)
 {
   switch (type)
     {
-    case WIFI_MAC_CTL_TRIGGER:
-      m_ctrlType = TYPE_CTL;
-      m_ctrlSubtype = SUBTYPE_CTL_TRIGGER;
-      break;
     case WIFI_MAC_CTL_CTLWRAPPER:
       m_ctrlType = TYPE_CTL;
       m_ctrlSubtype = SUBTYPE_CTL_CTLWRAPPER;
@@ -398,13 +376,6 @@ void WifiMacHeader::SetQosTxopLimit (uint8_t txop)
   m_qosStuff = txop;
 }
 
-void
-WifiMacHeader::SetQosQueueSize (uint8_t size)
-{
-  m_qosEosp = 1;
-  m_qosStuff = size;
-}
-
 void WifiMacHeader::SetQosMeshControlPresent (void)
 {
   //Mark bit 0 of this variable instead of bit 8, since m_qosStuff is
@@ -483,8 +454,6 @@ WifiMacHeader::GetType (void) const
     case TYPE_CTL:
       switch (m_ctrlSubtype)
         {
-        case SUBTYPE_CTL_TRIGGER:
-          return WIFI_MAC_CTL_TRIGGER;
         case SUBTYPE_CTL_BACKREQ:
           return WIFI_MAC_CTL_BACKREQ;
         case SUBTYPE_CTL_BACKRESP:
@@ -749,12 +718,6 @@ WifiMacHeader::IsBlockAck (void) const
   return (GetType () == WIFI_MAC_CTL_BACKRESP) ? true : false;
 }
 
-bool
-WifiMacHeader::IsTrigger (void) const
-{
-  return (GetType () == WIFI_MAC_CTL_TRIGGER) ? true : false;
-}
-
 uint16_t
 WifiMacHeader::GetRawDuration (void) const
 {
@@ -865,13 +828,6 @@ WifiMacHeader::GetQosTid (void) const
   return m_qosTid;
 }
 
-uint8_t
-WifiMacHeader::GetQosQueueSize (void) const
-{
-  NS_ASSERT (m_qosEosp == 1);
-  return m_qosStuff;
-}
-
 uint16_t
 WifiMacHeader::GetFrameControl (void) const
 {
@@ -944,7 +900,6 @@ WifiMacHeader::GetSize (void) const
         case SUBTYPE_CTL_RTS:
         case SUBTYPE_CTL_BACKREQ:
         case SUBTYPE_CTL_BACKRESP:
-        case SUBTYPE_CTL_TRIGGER:
         case SUBTYPE_CTL_END:
         case SUBTYPE_CTL_END_ACK:
           size = 2 + 2 + 6 + 6;
@@ -990,7 +945,6 @@ case WIFI_MAC_ ## x: \
       FOO (CTL_BACKRESP);
       FOO (CTL_END);
       FOO (CTL_END_ACK);
-      FOO (CTL_TRIGGER);
 
       FOO (MGT_BEACON);
       FOO (MGT_ASSOCIATION_REQUEST);
@@ -1064,7 +1018,6 @@ WifiMacHeader::Print (std::ostream &os) const
   switch (GetType ())
     {
     case WIFI_MAC_CTL_RTS:
-    case WIFI_MAC_CTL_TRIGGER:
       os << "Duration/ID=" << m_duration << "us"
          << ", RA=" << m_addr1 << ", TA=" << m_addr2;
       break;
@@ -1174,7 +1127,6 @@ WifiMacHeader::Serialize (Buffer::Iterator i) const
       switch (m_ctrlSubtype)
         {
         case SUBTYPE_CTL_RTS:
-        case SUBTYPE_CTL_TRIGGER:
         case SUBTYPE_CTL_BACKREQ:
         case SUBTYPE_CTL_BACKRESP:
         case SUBTYPE_CTL_END:
@@ -1230,7 +1182,6 @@ WifiMacHeader::Deserialize (Buffer::Iterator start)
       switch (m_ctrlSubtype)
         {
         case SUBTYPE_CTL_RTS:
-        case SUBTYPE_CTL_TRIGGER:
         case SUBTYPE_CTL_BACKREQ:
         case SUBTYPE_CTL_BACKRESP:
         case SUBTYPE_CTL_END:

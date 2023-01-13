@@ -23,7 +23,7 @@
 #include "ns3/names.h"
 
 /**
- * \file
+ * \filez
  * \ingroup bridge
  * ns3::BridgeHelper implementation.
  */

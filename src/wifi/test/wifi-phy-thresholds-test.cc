@@ -28,8 +28,7 @@
 #include "ns3/wifi-spectrum-signal-parameters.h"
 #include "ns3/wifi-utils.h"
 #include "ns3/wifi-psdu.h"
-#include "ns3/ofdm-ppdu.h"
-#include "ns3/ofdm-phy.h"
+#include "ns3/wifi-ppdu.h"
 
 using namespace ns3;
 
@@ -81,12 +80,11 @@ protected:
   /**
    * PHY receive success callback function
    * \param psdu the PSDU
-   * \param rxSignalInfo the info on the received signal (\see RxSignalInfo)
+   * \param snr the SNR
    * \param txVector the transmit vector
    * \param statusPerMpdu reception status per MPDU
    */
-  virtual void RxSuccess (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                          WifiTxVector txVector, std::vector<bool> statusPerMpdu);
+  virtual void RxSuccess (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu);
   /**
    * PHY receive failure callback function
    * \param psdu the PSDU
@@ -116,8 +114,7 @@ protected:
   uint32_t m_ccabusyStateCount; ///< count number of PHY state change to CCA_BUSY state
 
 private:
-  void DoSetup (void) override;
-  void DoTeardown (void) override;
+  virtual void DoSetup (void);
 };
 
 WifiPhyThresholdsTest::WifiPhyThresholdsTest (std::string test_name)
@@ -139,7 +136,7 @@ WifiPhyThresholdsTest::~WifiPhyThresholdsTest ()
 Ptr<SpectrumSignalParameters>
 WifiPhyThresholdsTest::MakeWifiSignal (double txPowerWatts)
 {
-  WifiTxVector txVector = WifiTxVector (OfdmPhy::GetOfdmRate6Mbps (), 0, WIFI_PREAMBLE_LONG, 800, 1, 1, 0, 20, false);
+  WifiTxVector txVector = WifiTxVector (WifiPhy::GetOfdmRate6Mbps (), 0, WIFI_PREAMBLE_LONG, 800, 1, 1, 0, 20, false, false);
 
   Ptr<Packet> pkt = Create<Packet> (1000);
   WifiMacHeader hdr;
@@ -148,9 +145,9 @@ WifiPhyThresholdsTest::MakeWifiSignal (double txPowerWatts)
   hdr.SetQosTid (0);
 
   Ptr<WifiPsdu> psdu = Create<WifiPsdu> (pkt, hdr);
-  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetPhyBand ());
+  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetFrequency ());
 
-  Ptr<WifiPpdu> ppdu = Create<OfdmPpdu> (psdu, txVector, WIFI_PHY_BAND_5GHZ, 0);
+  Ptr<WifiPpdu> ppdu = Create<WifiPpdu> (psdu, txVector, txDuration, FREQUENCY);
 
   Ptr<SpectrumValue> txPowerSpectrum = WifiSpectrumValueHelper::CreateHeOfdmTxPowerSpectralDensity (FREQUENCY, CHANNEL_WIDTH, txPowerWatts, CHANNEL_WIDTH);
   Ptr<WifiSpectrumSignalParameters> txParams = Create<WifiSpectrumSignalParameters> ();
@@ -186,10 +183,9 @@ WifiPhyThresholdsTest::SendSignal (double txPowerWatts, bool wifiSignal)
 }
 
 void
-WifiPhyThresholdsTest::RxSuccess (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                                  WifiTxVector txVector, std::vector<bool> statusPerMpdu)
+WifiPhyThresholdsTest::RxSuccess (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu)
 {
-  NS_LOG_FUNCTION (this << *psdu << rxSignalInfo << txVector);
+  NS_LOG_FUNCTION (this << *psdu << snr << txVector);
   m_rxSuccess++;
 }
 
@@ -230,7 +226,7 @@ void
 WifiPhyThresholdsTest::DoSetup (void)
 {
   m_phy = CreateObject<SpectrumWifiPhy> ();
-  m_phy->ConfigureStandardAndBand (WIFI_PHY_STANDARD_80211ax, WIFI_PHY_BAND_5GHZ);
+  m_phy->ConfigureStandard (WIFI_PHY_STANDARD_80211ax_5GHZ);
   Ptr<ErrorRateModel> error = CreateObject<NistErrorRateModel> ();
   m_phy->SetErrorRateModel (error);
   m_phy->SetChannelNumber (CHANNEL_NUMBER);
@@ -239,13 +235,6 @@ WifiPhyThresholdsTest::DoSetup (void)
   m_phy->SetReceiveErrorCallback (MakeCallback (&WifiPhyThresholdsTest::RxFailure, this));
   m_phy->TraceConnectWithoutContext ("PhyRxDrop", MakeCallback (&WifiPhyThresholdsTest::RxDropped, this));
   m_phy->GetState ()->TraceConnectWithoutContext ("State", MakeCallback (&WifiPhyThresholdsTest::PhyStateChanged, this));
-}
-
-void
-WifiPhyThresholdsTest::DoTeardown (void)
-{
-  m_phy->Dispose ();
-  m_phy = 0;
 }
 
 /**

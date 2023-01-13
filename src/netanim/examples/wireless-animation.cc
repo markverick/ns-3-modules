@@ -51,7 +51,7 @@ main (int argc, char *argv[])
   allNodes.Add (wifiApNode);
 
   YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();
-  YansWifiPhyHelper phy;
+  YansWifiPhyHelper phy = YansWifiPhyHelper::Default ();
   phy.SetChannel (channel.Create ());
 
   WifiHelper wifi;

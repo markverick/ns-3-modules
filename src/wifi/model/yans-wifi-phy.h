@@ -28,6 +28,7 @@
 namespace ns3 {
 
 class YansWifiChannel;
+class WifiPpdu;
 
 /**
  * \brief 802.11 PHY layer model
@@ -57,10 +58,8 @@ public:
   virtual ~YansWifiPhy ();
 
   // Implementation of pure virtual method.
-  void StartTx (Ptr<WifiPpdu> ppdu) override;
-  Ptr<Channel> GetChannel (void) const override;
-  uint16_t GetGuardBandwidth (uint16_t currentChannelWidth) const override;
-  std::tuple<double, double, double> GetTxMaskRejectionParams (void) const override;
+  void StartTx (Ptr<WifiPpdu> ppdu);
+  virtual Ptr<Channel> GetChannel (void) const;
 
   /**
    * Set the YansWifiChannel this YansWifiPhy is to be connected to.
@@ -70,7 +69,8 @@ public:
   void SetChannel (const Ptr<YansWifiChannel> channel);
 
 protected:
-  void DoDispose (void) override;
+  // Inherited
+  virtual void DoDispose (void);
 
 
 private:

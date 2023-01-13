@@ -150,7 +150,7 @@ HalfDuplexIdealPhy::GetDevice () const
 
 
 Ptr<MobilityModel>
-HalfDuplexIdealPhy::GetMobility () const
+HalfDuplexIdealPhy::GetMobility ()
 {
   NS_LOG_FUNCTION (this);
   return m_mobility;
@@ -256,7 +256,7 @@ HalfDuplexIdealPhy::SetGenericPhyRxEndOkCallback (GenericPhyRxEndOkCallback c)
 }
 
 Ptr<AntennaModel>
-HalfDuplexIdealPhy::GetRxAntenna () const
+HalfDuplexIdealPhy::GetRxAntenna ()
 {
   NS_LOG_FUNCTION (this);
   return m_antenna;

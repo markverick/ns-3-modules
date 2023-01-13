@@ -42,10 +42,6 @@
 #include <map>
 
 namespace ns3 {
-
-class WifiMacQueueItem;
-enum WifiMacDropReason : uint8_t;  // opaque enum declaration
-
 namespace aodv {
 /**
  * \ingroup aodv
@@ -184,14 +180,6 @@ public:
 protected:
   virtual void DoInitialize (void);
 private:
-  /**
-   * Notify that an MPDU was dropped.
-   *
-   * \param reason the reason why the MPDU was dropped
-   * \param mpdu the dropped MPDU
-   */
-  void NotifyTxError (WifiMacDropReason reason, Ptr<const WifiMacQueueItem> mpdu);
-
   // Protocol parameters.
   uint32_t m_rreqRetries;             ///< Maximum number of retransmissions of RREQ with TTL = NetDiameter to discover a route
   uint16_t m_ttlStart;                ///< Initial TTL value for RREQ.
@@ -338,56 +326,27 @@ private:
 
   ///\name Receive control packets
   //\{
-  /**
-   * Receive and process control packet
-   * \param socket input socket
-   */
+  /// Receive and process control packet
   void RecvAodv (Ptr<Socket> socket);
-  /**
-   * Receive RREQ
-   * \param p packet
-   * \param receiver receiver address
-   * \param src sender address
-   */
+  /// Receive RREQ
   void RecvRequest (Ptr<Packet> p, Ipv4Address receiver, Ipv4Address src);
-  /**
-   * Receive RREP
-   * \param p packet
-   * \param my destination address
-   * \param src sender address
-   */
-  void RecvReply (Ptr<Packet> p, Ipv4Address my, Ipv4Address src);
-  /**
-   * Receive RREP_ACK
-   * \param neighbor neighbor address
-   */
+  /// Receive RREP
+  void RecvReply (Ptr<Packet> p, Ipv4Address my,Ipv4Address src);
+  /// Receive RREP_ACK
   void RecvReplyAck (Ipv4Address neighbor);
-  /**
-   * Receive RERR
-   * \param p packet
-   * \param src sender address
-   */
-  /// Receive  from node with address src
+  /// Receive RERR from node with address src
   void RecvError (Ptr<Packet> p, Ipv4Address src);
   //\}
 
   ///\name Send
   //\{
-  /** Forward packet from route request queue
-   * \param dst destination address
-   * \param route route to use
-   */
+  /// Forward packet from route request queue
   void SendPacketFromQueue (Ipv4Address dst, Ptr<Ipv4Route> route);
   /// Send hello
   void SendHello ();
-  /** Send RREQ
-   * \param dst destination address
-   */
+  /// Send RREQ
   void SendRequest (Ipv4Address dst);
-  /** Send RREP
-   * \param rreqHeader route request header
-   * \param toOrigin routing table entry to originator
-   */
+  /// Send RREP
   void SendReply (RreqHeader const & rreqHeader, RoutingTableEntry const & toOrigin);
   /** Send RREP by intermediate node
    * \param toDst routing table entry to destination
@@ -395,18 +354,11 @@ private:
    * \param gratRep indicates whether a gratuitous RREP should be unicast to destination
    */
   void SendReplyByIntermediateNode (RoutingTableEntry & toDst, RoutingTableEntry & toOrigin, bool gratRep);
-  /** Send RREP_ACK
-   * \param neighbor neighbor address
-   */
+  /// Send RREP_ACK
   void SendReplyAck (Ipv4Address neighbor);
-  /** Initiate RERR
-   * \param nextHop next hop address
-   */
+  /// Initiate RERR
   void SendRerrWhenBreaksLinkToNextHop (Ipv4Address nextHop);
-  /** Forward RERR
-   * \param packet packet
-   * \param precursors list of addresses of the visited nodes
-   */
+  /// Forward RERR
   void SendRerrMessage (Ptr<Packet> packet,  std::vector<Ipv4Address> precursors);
   /**
    * Send RERR message when no route to forward input packet. Unicast if there is reverse route to originating node, broadcast otherwise.

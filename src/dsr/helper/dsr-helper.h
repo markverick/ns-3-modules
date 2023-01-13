@@ -61,9 +61,8 @@ public:
   /**
    * \brief Construct an DsrHelper from another previously initialized instance
    * (Copy Constructor).
-   * \param o object to copy from
    */
-  DsrHelper (const DsrHelper &o);
+  DsrHelper (const DsrHelper &);
   /**
    * \returns pointer to clone of this DsrHelper
    *

@@ -144,7 +144,7 @@ TvSpectrumTransmitter::SetDevice (Ptr<NetDevice> d)
 }
 
 Ptr<MobilityModel>
-TvSpectrumTransmitter::GetMobility () const
+TvSpectrumTransmitter::GetMobility ()
 {
   NS_LOG_FUNCTION (this);
   return m_mobility;
@@ -165,7 +165,7 @@ TvSpectrumTransmitter::GetRxSpectrumModel () const
 }
 
 Ptr<AntennaModel>
-TvSpectrumTransmitter::GetRxAntenna () const
+TvSpectrumTransmitter::GetRxAntenna ()
 {
   NS_LOG_FUNCTION (this);
   return m_antenna;

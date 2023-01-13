@@ -870,8 +870,6 @@ bool SetDefaultFailSafe (std::string fullName, const AttributeValue &value)
     {
       return false;
     }
-  struct TypeId::AttributeInformation info;
-  tid.LookupAttributeByName(paramName, &info);
   for (uint32_t j = 0; j < tid.GetAttributeN (); j++)
     {
       struct TypeId::AttributeInformation tmp = tid.GetAttribute (j);
@@ -901,10 +899,7 @@ bool SetGlobalFailSafe (std::string name, const AttributeValue &value)
 void ConnectWithoutContext (std::string path, const CallbackBase &cb)
 {
   NS_LOG_FUNCTION (path << &cb);
-  if (!ConnectWithoutContextFailSafe (path, cb))
-    {
-      NS_FATAL_ERROR ("Could not connect callback to " << path);
-    }
+  ConnectWithoutContextFailSafe (path, cb);
 }
 bool ConnectWithoutContextFailSafe (std::string path, const CallbackBase &cb)
 {

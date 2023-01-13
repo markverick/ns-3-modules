@@ -135,9 +135,9 @@ int main (int argc, char *argv[])
     {
       wifi.EnableLogComponents ();  // Turn on all Wifi logging
     }
-  wifi.SetStandard (WIFI_STANDARD_80211b);
+  wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
 
-  YansWifiPhyHelper wifiPhy;
+  YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
   // This is one parameter that matters when using FixedRssLossModel
   // set it to zero; otherwise, gain will be added
   wifiPhy.Set ("RxGain", DoubleValue (0) );
@@ -251,9 +251,6 @@ int main (int argc, char *argv[])
   // Tracing
   wifiPhy.EnablePcap ("olsr-hna", devices);
   csma.EnablePcap ("olsr-hna", csmaDevices, false);
-  AsciiTraceHelper ascii;
-  wifiPhy.EnableAsciiAll (ascii.CreateFileStream ("olsr-hna-wifi.tr"));
-  csma.EnableAsciiAll (ascii.CreateFileStream ("olsr-hna-csma.tr"));
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
                                   Seconds (15.0), &GenerateTraffic,

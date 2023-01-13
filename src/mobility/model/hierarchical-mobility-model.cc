@@ -19,12 +19,8 @@
  */
 #include "hierarchical-mobility-model.h"
 #include "ns3/pointer.h"
-#include "ns3/log.h"
-#include "ns3/simulator.h"
 
 namespace ns3 {
-
-NS_LOG_COMPONENT_DEFINE ("HierarchicalMobilityModel");
 
 NS_OBJECT_ENSURE_REGISTERED (HierarchicalMobilityModel);
 
@@ -53,18 +49,15 @@ HierarchicalMobilityModel::HierarchicalMobilityModel ()
   : m_child (0),
     m_parent (0)
 {
-  NS_LOG_FUNCTION (this);
 }
 
 void
 HierarchicalMobilityModel::SetChild (Ptr<MobilityModel> model)
 {
-  NS_LOG_FUNCTION (this << model);
   Ptr<MobilityModel> oldChild = m_child;
   Vector pos;
   if (m_child)
     {
-      NS_LOG_DEBUG ("Disconnecting previous child model " << m_child);
       pos = GetPosition ();
       m_child->TraceDisconnectWithoutContext ("CourseChange", MakeCallback (&HierarchicalMobilityModel::ChildChanged, this));
     }
@@ -75,7 +68,6 @@ HierarchicalMobilityModel::SetChild (Ptr<MobilityModel> model)
   // try to preserve the old absolute position.
   if (oldChild)
     {
-      NS_LOG_DEBUG ("Restoring previous position " << pos);
       SetPosition (pos);
     }
 }
@@ -83,7 +75,6 @@ HierarchicalMobilityModel::SetChild (Ptr<MobilityModel> model)
 void 
 HierarchicalMobilityModel::SetParent (Ptr<MobilityModel> model)
 {
-  NS_LOG_FUNCTION (this << model);
   Vector pos;
   if (m_child)
     {
@@ -91,7 +82,6 @@ HierarchicalMobilityModel::SetParent (Ptr<MobilityModel> model)
     }
   if (m_parent)
     {
-      NS_LOG_DEBUG ("Disconnecting previous parent model " << m_child);
       m_parent->TraceDisconnectWithoutContext ("CourseChange", MakeCallback (&HierarchicalMobilityModel::ParentChanged, this));
     }
   m_parent = model;
@@ -102,7 +92,6 @@ HierarchicalMobilityModel::SetParent (Ptr<MobilityModel> model)
   // try to preserve the old position across parent changes
   if (m_child)
     {
-      NS_LOG_DEBUG ("Restoring previous position " << pos);
       SetPosition (pos);
     }
 }
@@ -128,7 +117,7 @@ HierarchicalMobilityModel::DoGetPosition (void) const
       return m_child->GetPosition ();
     }
   Vector parentPosition = m_parent->GetPosition ();
-  Vector childPosition = m_child->GetPositionWithReference (parentPosition);
+  Vector childPosition = m_child->GetPosition ();
   return Vector (parentPosition.x + childPosition.x,
                  parentPosition.y + childPosition.y,
                  parentPosition.z + childPosition.z);
@@ -136,7 +125,6 @@ HierarchicalMobilityModel::DoGetPosition (void) const
 void 
 HierarchicalMobilityModel::DoSetPosition (const Vector &position)
 {
-  NS_LOG_FUNCTION (this << position);
   if (m_child == 0)
     {
       return;
@@ -186,25 +174,6 @@ HierarchicalMobilityModel::ChildChanged (Ptr<const MobilityModel> model)
   MobilityModel::NotifyCourseChange ();
 }
 
-void
-HierarchicalMobilityModel::DoInitialize (void)
-{
-  NS_LOG_FUNCTION (this);
-  if (m_parent && !m_parent->IsInitialized ())
-    {
-      m_parent->Initialize ();
-    }
-  m_child->Initialize ();
-}
 
-int64_t
-HierarchicalMobilityModel::DoAssignStreams (int64_t stream)
-{
-  NS_LOG_FUNCTION (this << stream);
-  int64_t streamsAllocated = 0;
-  streamsAllocated += m_parent->AssignStreams (stream);
-  streamsAllocated += m_child->AssignStreams (stream + streamsAllocated);
-  return streamsAllocated;
-}
 
 } // namespace ns3

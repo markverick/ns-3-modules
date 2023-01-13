@@ -21,15 +21,14 @@
 
 #include "ns3/ipv4.h"
 #include "ns3/ipv6.h"
-#include "ns3/ipv4-end-point.h"
-#include "ns3/ipv6-end-point.h"
+#include "../model/ipv4-end-point.h"
+#include "../model/ipv6-end-point.h"
 #include "tcp-general-test.h"
 #include "ns3/node.h"
 #include "ns3/log.h"
 #include "tcp-error-model.h"
 #include "ns3/tcp-l4-protocol.h"
 #include "ns3/tcp-dctcp.h"
-#include "ns3/tcp-linux-reno.h"
 #include "ns3/tcp-tx-buffer.h"
 #include "ns3/config.h"
 
@@ -63,10 +62,10 @@ protected:
   void ConfigureEnvironment ();
 
 private:
-  uint32_t m_senderSent;      //!< Number of packets sent by the sender
-  uint32_t m_receiverSent;    //!< Number of packets sent by the receiver
-  uint32_t m_senderReceived;  //!< Number of packets received by the sender
-  uint8_t m_testCase;         //!< Test type
+  uint32_t m_senderSent;
+  uint32_t m_receiverSent;
+  uint32_t m_senderReceived;
+  uint8_t m_testCase;
 };
 
 TcpDctcpCodePointsTest::TcpDctcpCodePointsTest (uint8_t testCase, const std::string &desc)
@@ -197,8 +196,8 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  uint32_t m_dataPacketSent;  //!< Number of packets sent
-  uint8_t m_testCase;         //!< Test type
+  uint32_t m_dataPacketSent;
+  uint8_t m_testCase;
 
   TcpDctcpCongestedRouter ()
     : TcpSocketMsgBase ()
@@ -215,10 +214,6 @@ public:
   {
   }
 
-  /**
-   * Set the test case type
-   * \param testCase test case type
-   */
   void SetTestCase (uint8_t testCase);
 protected:
   virtual uint32_t SendDataPacket (SequenceNumber32 seq, uint32_t maxSize, bool withAck);
@@ -278,6 +273,7 @@ TcpDctcpCongestedRouter::SendDataPacket (SequenceNumber32 seq, uint32_t maxSize,
   if (m_tcb->m_ecnState == TcpSocketState::ECN_ECE_RCVD && m_ecnEchoSeq.Get () > m_ecnCWRSeq.Get () && !isRetransmission && m_testCase != 3)
     {
       NS_LOG_INFO ("Backoff mechanism by reducing CWND  by half because we've received ECN Echo");
+      m_congestionControl->ReduceCwnd (m_tcb);
       m_tcb->m_ssThresh = m_tcb->m_cWnd;
       flags |= TcpHeader::CWR;
       m_ecnCWRSeq = seq;
@@ -513,9 +509,9 @@ TcpDctcpCodePointsTest::CreateReceiverSocket (Ptr<Node> node)
  * \ingroup internet-test
  * \ingroup tests
  *
- * \brief DCTCP should be same as Linux during slow start
+ * \brief DCTCP should be same as NewReno during slow start
  */
-class TcpDctcpToLinuxReno : public TestCase
+class TcpDctcpToNewReno : public TestCase
 {
 public:
   /**
@@ -530,7 +526,7 @@ public:
    * \param rtt RTT
    * \param name Name of the test
    */
-  TcpDctcpToLinuxReno (uint32_t cWnd, uint32_t segmentSize, uint32_t ssThresh,
+  TcpDctcpToNewReno (uint32_t cWnd, uint32_t segmentSize, uint32_t ssThresh,
                      uint32_t segmentsAcked, SequenceNumber32 highTxMark,
                      SequenceNumber32 lastAckedSeq, Time rtt, const std::string &name);
 
@@ -550,7 +546,7 @@ private:
   Ptr<TcpSocketState> m_state;            //!< state
 };
 
-TcpDctcpToLinuxReno::TcpDctcpToLinuxReno (uint32_t cWnd, uint32_t segmentSize, uint32_t ssThresh,
+TcpDctcpToNewReno::TcpDctcpToNewReno (uint32_t cWnd, uint32_t segmentSize, uint32_t ssThresh,
                                       uint32_t segmentsAcked, SequenceNumber32 highTxMark,
                                       SequenceNumber32 lastAckedSeq, Time rtt, const std::string &name)
   : TestCase (name),
@@ -565,15 +561,15 @@ TcpDctcpToLinuxReno::TcpDctcpToLinuxReno (uint32_t cWnd, uint32_t segmentSize, u
 }
 
 void
-TcpDctcpToLinuxReno::DoRun ()
+TcpDctcpToNewReno::DoRun ()
 {
-  Simulator::Schedule (Seconds (0.0), &TcpDctcpToLinuxReno::ExecuteTest, this);
+  Simulator::Schedule (Seconds (0.0), &TcpDctcpToNewReno::ExecuteTest, this);
   Simulator::Run ();
   Simulator::Destroy ();
 }
 
 void
-TcpDctcpToLinuxReno::ExecuteTest ()
+TcpDctcpToNewReno::ExecuteTest ()
 {
   m_state = CreateObject <TcpSocketState> ();
   m_state->m_cWnd = m_cWnd;
@@ -592,11 +588,95 @@ TcpDctcpToLinuxReno::ExecuteTest ()
   Ptr<TcpDctcp> cong = CreateObject <TcpDctcp> ();
   cong->IncreaseWindow (m_state, m_segmentsAcked);
 
-  Ptr<TcpLinuxReno> LinuxRenoCong = CreateObject <TcpLinuxReno> ();
-  LinuxRenoCong->IncreaseWindow (state, m_segmentsAcked);
+  Ptr<TcpNewReno> NewRenoCong = CreateObject <TcpNewReno> ();
+  NewRenoCong->IncreaseWindow (state, m_segmentsAcked);
 
   NS_TEST_ASSERT_MSG_EQ (m_state->m_cWnd.Get (), state->m_cWnd.Get (),
                          "cWnd has not updated correctly");
+}
+/**
+ * \ingroup internet-test
+ * \ingroup tests
+ *
+ * \brief Test to validate cWnd decrement DCTCP
+ */
+class TcpDctcpDecrementTest : public TestCase
+{
+public:
+  /**
+   * \brief Constructor
+   *
+   * \param cWnd congestion window
+   * \param segmentSize segment size
+   * \param segmentsAcked segments acked
+   * \param highTxMark high tx mark
+   * \param lastAckedSeq last acked seq
+   * \param rtt RTT
+   * \param name Name of the test
+   */
+  TcpDctcpDecrementTest (uint32_t cWnd, uint32_t segmentSize, uint32_t segmentsAcked, SequenceNumber32 nextTxSequence,
+                         SequenceNumber32 lastAckedSeq, Time rtt, const std::string &name);
+
+private:
+  virtual void DoRun (void);
+  /** \brief Execute the test
+   */
+  void ExecuteTest (void);
+
+  uint32_t m_cWnd; //!< cWnd
+  uint32_t m_segmentSize; //!< segment size
+  uint32_t m_segmentsAcked; //!< segments acked
+  Time m_rtt; //!< rtt
+  SequenceNumber32 m_nextTxSequence; //!< next seq num to be sent
+  SequenceNumber32 m_lastAckedSeq; //!< last acked seq
+  Ptr<TcpSocketState> m_state; //!< state
+};
+
+TcpDctcpDecrementTest::TcpDctcpDecrementTest (uint32_t cWnd, uint32_t segmentSize, uint32_t segmentsAcked, SequenceNumber32 nextTxSequence,
+                                              SequenceNumber32 lastAckedSeq, Time rtt, const std::string &name)
+  : TestCase (name),
+    m_cWnd (cWnd),
+    m_segmentSize (segmentSize),
+    m_segmentsAcked (segmentsAcked),
+    m_rtt (rtt),
+    m_nextTxSequence (nextTxSequence),
+    m_lastAckedSeq (lastAckedSeq)
+{
+}
+
+void
+TcpDctcpDecrementTest::DoRun ()
+{
+  Config::SetDefault ("ns3::TcpDctcp::DctcpAlphaOnInit", DoubleValue (0));
+  Simulator::Schedule (Seconds (0.0), &TcpDctcpDecrementTest::ExecuteTest, this);
+  Simulator::Run ();
+  Simulator::Destroy ();
+}
+
+void
+TcpDctcpDecrementTest::ExecuteTest (void)
+{
+  m_state = CreateObject <TcpSocketState> ();
+  m_state->m_cWnd = m_cWnd;
+  m_state->m_segmentSize = m_segmentSize;
+  m_state->m_nextTxSequence = m_nextTxSequence;
+  m_state->m_lastAckedSeq = m_lastAckedSeq;
+
+  Ptr<TcpDctcp> cong = CreateObject <TcpDctcp> ();
+  m_state->m_ecnState = TcpSocketState::ECN_IDLE;
+  cong->PktsAcked (m_state, m_segmentsAcked, m_rtt);
+  cong->ReduceCwnd (m_state);
+  NS_TEST_ASSERT_MSG_EQ (m_state->m_cWnd.Get (), m_cWnd,
+                         "cWnd has updated correctly");
+
+  m_state->m_ecnState = TcpSocketState::ECN_ECE_RCVD;
+  cong->PktsAcked (m_state, m_segmentsAcked, m_rtt);
+  cong->ReduceCwnd (m_state);
+
+  uint32_t val = (uint32_t)(m_cWnd * (1 - 0.0625 / 2.0));
+  NS_TEST_ASSERT_MSG_EQ (m_state->m_cWnd.Get (), val,
+                         "cWnd has updated correctly");
+
 }
 
 /**
@@ -610,11 +690,12 @@ class TcpDctcpTestSuite : public TestSuite
 public:
   TcpDctcpTestSuite () : TestSuite ("tcp-dctcp-test", UNIT)
   {
-    AddTestCase (new TcpDctcpToLinuxReno (2 * 1446, 1446, 4 * 1446, 2, SequenceNumber32 (4753), SequenceNumber32 (3216), MilliSeconds (100), "DCTCP falls to New Reno for slowstart"), TestCase::QUICK);
+    AddTestCase (new TcpDctcpToNewReno (2 * 1446, 1446, 4 * 1446, 2, SequenceNumber32 (4753), SequenceNumber32 (3216), MilliSeconds (100), "DCTCP falls to New Reno for slowstart"), TestCase::QUICK);
+    AddTestCase (new TcpDctcpDecrementTest (4 * 1446, 1446, 2, SequenceNumber32 (3216), SequenceNumber32 (4753), MilliSeconds (100), "DCTCP decrement test"), TestCase::QUICK);
     AddTestCase (new TcpDctcpCodePointsTest (1, "ECT Test : Check if ECT is set on Syn, Syn+Ack, Ack and Data packets for DCTCP packets"),
                  TestCase::QUICK);
     AddTestCase (new TcpDctcpCodePointsTest (2, "ECT Test : Check if ECT is not set on Syn, Syn+Ack and Ack but set on Data packets for non-DCTCP but ECN enabled traffic"),TestCase::QUICK);
-    AddTestCase (new TcpDctcpCodePointsTest (3, "ECE Functionality Test: ECE should only be sent by receiver when it receives CE flags"),
+    AddTestCase (new TcpDctcpCodePointsTest (3, "ECE Functionality Test: ECE should only be sent by reciever when it receives CE flags"),
                  TestCase::QUICK);
   }
 };

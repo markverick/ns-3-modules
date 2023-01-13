@@ -19,20 +19,11 @@
  */
 
 #include "ns3/log.h"
-#include "ns3/mobility-helper.h"
-#include "ns3/multi-model-spectrum-channel.h"
-#include "ns3/config.h"
-#include "ns3/ap-wifi-mac.h"
-#include "ns3/packet-socket-address.h"
-#include "ns3/packet-socket-client.h"
-#include "ns3/packet-socket-helper.h"
-#include "ns3/packet-socket-server.h"
 #include "ns3/test.h"
 #include "ns3/double.h"
 #include "ns3/pointer.h"
 #include "ns3/rng-seed-manager.h"
 #include "ns3/spectrum-wifi-helper.h"
-#include "ns3/wifi-net-device.h"
 #include "ns3/wifi-spectrum-value-helper.h"
 #include "ns3/spectrum-wifi-phy.h"
 #include "ns3/nist-error-rate-model.h"
@@ -42,11 +33,11 @@
 #include "ns3/wifi-utils.h"
 #include "ns3/threshold-preamble-detection-model.h"
 #include "ns3/simple-frame-capture-model.h"
+#include "ns3/wifi-psdu.h"
 #include "ns3/wifi-mac-queue-item.h"
 #include "ns3/mpdu-aggregator.h"
 #include "ns3/wifi-psdu.h"
-#include "ns3/he-ppdu.h"
-#include "ns3/he-phy.h"
+#include "ns3/wifi-ppdu.h"
 
 using namespace ns3;
 
@@ -70,8 +61,7 @@ public:
   virtual ~TestThresholdPreambleDetectionWithoutFrameCapture ();
 
 protected:
-  void DoSetup (void) override;
-  void DoTeardown (void) override;
+  virtual void DoSetup (void);
   Ptr<SpectrumWifiPhy> m_phy; ///< Phy
   /**
    * Send packet function
@@ -81,12 +71,11 @@ protected:
   /**
    * Spectrum wifi receive success function
    * \param psdu the PSDU
-   * \param rxSignalInfo the info on the received signal (\see RxSignalInfo)
+   * \param snr the SNR
    * \param txVector the transmit vector
    * \param statusPerMpdu reception status per MPDU
    */
-  void RxSuccess (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                  WifiTxVector txVector, std::vector<bool> statusPerMpdu);
+  void RxSuccess (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu);
   /**
    * Spectrum wifi receive failure function
    * \param psdu the PSDU
@@ -96,7 +85,7 @@ protected:
   uint32_t m_countRxFailure; ///< count RX failure
 
 private:
-  void DoRun (void) override;
+  virtual void DoRun (void);
 
   /**
    * Schedule now to check  the PHY state
@@ -114,22 +103,19 @@ private:
    * \param expectedFailureCount the number of unsuccessfully received packets
    */
   void CheckRxPacketCount (uint32_t expectedSuccessCount, uint32_t expectedFailureCount);
-
-  uint64_t m_uid; //!< the UID to use for the PPDU
 };
 
 TestThresholdPreambleDetectionWithoutFrameCapture::TestThresholdPreambleDetectionWithoutFrameCapture ()
   : TestCase ("Threshold preamble detection model test when no frame capture model is applied"),
     m_countRxSuccess (0),
-    m_countRxFailure (0),
-    m_uid (0)
+    m_countRxFailure (0)
 {
 }
 
 void
 TestThresholdPreambleDetectionWithoutFrameCapture::SendPacket (double rxPowerDbm)
 {
-  WifiTxVector txVector = WifiTxVector (HePhy::GetHeMcs7 (), 0, WIFI_PREAMBLE_HE_SU, 800, 1, 1, 0, 20, false);
+  WifiTxVector txVector = WifiTxVector (WifiPhy::GetHeMcs7 (), 0, WIFI_PREAMBLE_HE_SU, 800, 1, 1, 0, 20, false, false);
 
   Ptr<Packet> pkt = Create<Packet> (1000);
   WifiMacHeader hdr;
@@ -138,9 +124,9 @@ TestThresholdPreambleDetectionWithoutFrameCapture::SendPacket (double rxPowerDbm
   hdr.SetQosTid (0);
 
   Ptr<WifiPsdu> psdu = Create<WifiPsdu> (pkt, hdr);
-  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetPhyBand ());
+  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetFrequency ());
 
-  Ptr<WifiPpdu> ppdu = Create<HePpdu> (psdu, txVector, txDuration, WIFI_PHY_BAND_5GHZ, m_uid++);
+  Ptr<WifiPpdu> ppdu = Create<WifiPpdu> (psdu, txVector, txDuration, FREQUENCY);
 
   Ptr<SpectrumValue> txPowerSpectrum = WifiSpectrumValueHelper::CreateHeOfdmTxPowerSpectralDensity (FREQUENCY, CHANNEL_WIDTH, DbmToW (rxPowerDbm), GUARD_WIDTH);
 
@@ -180,10 +166,9 @@ TestThresholdPreambleDetectionWithoutFrameCapture::CheckRxPacketCount (uint32_t 
 }
 
 void
-TestThresholdPreambleDetectionWithoutFrameCapture::RxSuccess (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                                                              WifiTxVector txVector, std::vector<bool> statusPerMpdu)
+TestThresholdPreambleDetectionWithoutFrameCapture::RxSuccess (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu)
 {
-  NS_LOG_FUNCTION (this << *psdu << rxSignalInfo << txVector);
+  NS_LOG_FUNCTION (this << *psdu << snr << txVector);
   m_countRxSuccess++;
 }
 
@@ -203,7 +188,7 @@ void
 TestThresholdPreambleDetectionWithoutFrameCapture::DoSetup (void)
 {
   m_phy = CreateObject<SpectrumWifiPhy> ();
-  m_phy->ConfigureStandardAndBand (WIFI_PHY_STANDARD_80211ax, WIFI_PHY_BAND_5GHZ);
+  m_phy->ConfigureStandard (WIFI_PHY_STANDARD_80211ax_5GHZ);
   Ptr<ErrorRateModel> error = CreateObject<NistErrorRateModel> ();
   m_phy->SetErrorRateModel (error);
   m_phy->SetChannelNumber (CHANNEL_NUMBER);
@@ -215,13 +200,6 @@ TestThresholdPreambleDetectionWithoutFrameCapture::DoSetup (void)
   preambleDetectionModel->SetAttribute ("Threshold", DoubleValue (4));
   preambleDetectionModel->SetAttribute ("MinimumRssi", DoubleValue (-82));
   m_phy->SetPreambleDetectionModel (preambleDetectionModel);
-}
-
-void
-TestThresholdPreambleDetectionWithoutFrameCapture::DoTeardown (void)
-{
-  m_phy->Dispose ();
-  m_phy = 0;
 }
 
 void
@@ -312,9 +290,9 @@ TestThresholdPreambleDetectionWithoutFrameCapture::DoRun (void)
 
   Simulator::Schedule (Seconds (5.0), &TestThresholdPreambleDetectionWithoutFrameCapture::SendPacket, this, rxPowerDbm);
   Simulator::Schedule (Seconds (5.0) + MicroSeconds (2.0), &TestThresholdPreambleDetectionWithoutFrameCapture::SendPacket, this, rxPowerDbm + 3);
-  // At 6us (hence 4us after the last signal is received), no preamble is successfully detected, hence STA PHY STATE should move from IDLE to CCA_BUSY
-  Simulator::Schedule (Seconds (5.0) + NanoSeconds (5999), &TestThresholdPreambleDetectionWithoutFrameCapture::CheckPhyState, this, WifiPhyState::IDLE);
-  Simulator::Schedule (Seconds (5.0) + NanoSeconds (6000), &TestThresholdPreambleDetectionWithoutFrameCapture::CheckPhyState, this, WifiPhyState::CCA_BUSY);
+  // At 4us, no preamble is successfully detected, hence STA PHY STATE should move from IDLE to CCA_BUSY
+  Simulator::Schedule (Seconds (5.0) + NanoSeconds (3999), &TestThresholdPreambleDetectionWithoutFrameCapture::CheckPhyState, this, WifiPhyState::IDLE);
+  Simulator::Schedule (Seconds (5.0) + NanoSeconds (4000), &TestThresholdPreambleDetectionWithoutFrameCapture::CheckPhyState, this, WifiPhyState::CCA_BUSY);
   // Since it takes 152.8us to transmit each packet, PHY should be back to IDLE at time 152.8 + 2 = 154.8us
   Simulator::Schedule (Seconds (5.0) + NanoSeconds (154799), &TestThresholdPreambleDetectionWithoutFrameCapture::CheckPhyState, this, WifiPhyState::CCA_BUSY);
   Simulator::Schedule (Seconds (5.0) + NanoSeconds (154800), &TestThresholdPreambleDetectionWithoutFrameCapture::CheckPhyState, this, WifiPhyState::IDLE);
@@ -435,8 +413,7 @@ public:
   virtual ~TestThresholdPreambleDetectionWithFrameCapture ();
 
 protected:
-  void DoSetup (void) override;
-  void DoTeardown (void) override;
+  virtual void DoSetup (void);
   Ptr<SpectrumWifiPhy> m_phy; ///< Phy
   /**
    * Send packet function
@@ -446,12 +423,11 @@ protected:
   /**
    * Spectrum wifi receive success function
    * \param psdu the PSDU
-   * \param rxSignalInfo the info on the received signal (\see RxSignalInfo)
+   * \param snr the SNR
    * \param txVector the transmit vector
    * \param statusPerMpdu reception status per MPDU
    */
-  void RxSuccess (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                  WifiTxVector txVector, std::vector<bool> statusPerMpdu);
+  void RxSuccess (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu);
   /**
    * Spectrum wifi receive failure function
    * \param psdu the PSDU
@@ -461,7 +437,7 @@ protected:
   uint32_t m_countRxFailure; ///< count RX failure
 
 private:
-  void DoRun (void) override;
+  virtual void DoRun (void);
 
   /**
    * Schedule now to check  the PHY state
@@ -479,22 +455,19 @@ private:
    * \param expectedFailureCount the number of unsuccessfully received packets
    */
   void CheckRxPacketCount (uint32_t expectedSuccessCount, uint32_t expectedFailureCount);
-
-  uint64_t m_uid; //!< the UID to use for the PPDU
 };
 
 TestThresholdPreambleDetectionWithFrameCapture::TestThresholdPreambleDetectionWithFrameCapture ()
 : TestCase ("Threshold preamble detection model test when simple frame capture model is applied"),
-  m_countRxSuccess (0),
-  m_countRxFailure (0),
-  m_uid (0)
+m_countRxSuccess (0),
+m_countRxFailure (0)
 {
 }
 
 void
 TestThresholdPreambleDetectionWithFrameCapture::SendPacket (double rxPowerDbm)
 {
-  WifiTxVector txVector = WifiTxVector (HePhy::GetHeMcs7 (), 0, WIFI_PREAMBLE_HE_SU, 800, 1, 1, 0, 20, false);
+  WifiTxVector txVector = WifiTxVector (WifiPhy::GetHeMcs7 (), 0, WIFI_PREAMBLE_HE_SU, 800, 1, 1, 0, 20, false, false);
   
   Ptr<Packet> pkt = Create<Packet> (1000);
   WifiMacHeader hdr;
@@ -503,9 +476,9 @@ TestThresholdPreambleDetectionWithFrameCapture::SendPacket (double rxPowerDbm)
   hdr.SetQosTid (0);
 
   Ptr<WifiPsdu> psdu = Create<WifiPsdu> (pkt, hdr);
-  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetPhyBand ());
+  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetFrequency ());
 
-  Ptr<WifiPpdu> ppdu = Create<HePpdu> (psdu, txVector, txDuration, WIFI_PHY_BAND_5GHZ, m_uid++);
+  Ptr<WifiPpdu> ppdu = Create<WifiPpdu> (psdu, txVector, txDuration, FREQUENCY);
 
   Ptr<SpectrumValue> txPowerSpectrum = WifiSpectrumValueHelper::CreateHeOfdmTxPowerSpectralDensity (FREQUENCY, CHANNEL_WIDTH, DbmToW (rxPowerDbm), GUARD_WIDTH);
 
@@ -545,8 +518,7 @@ TestThresholdPreambleDetectionWithFrameCapture::CheckRxPacketCount (uint32_t exp
 }
 
 void
-TestThresholdPreambleDetectionWithFrameCapture::RxSuccess (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                                                           WifiTxVector txVector, std::vector<bool> statusPerMpdu)
+TestThresholdPreambleDetectionWithFrameCapture::RxSuccess (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu)
 {
   NS_LOG_FUNCTION (this << *psdu << txVector);
   m_countRxSuccess++;
@@ -568,7 +540,7 @@ void
 TestThresholdPreambleDetectionWithFrameCapture::DoSetup (void)
 {
   m_phy = CreateObject<SpectrumWifiPhy> ();
-  m_phy->ConfigureStandardAndBand (WIFI_PHY_STANDARD_80211ax, WIFI_PHY_BAND_5GHZ);
+  m_phy->ConfigureStandard (WIFI_PHY_STANDARD_80211ax_5GHZ);
   Ptr<ErrorRateModel> error = CreateObject<NistErrorRateModel> ();
   m_phy->SetErrorRateModel (error);
   m_phy->SetChannelNumber (CHANNEL_NUMBER);
@@ -585,13 +557,6 @@ TestThresholdPreambleDetectionWithFrameCapture::DoSetup (void)
   frameCaptureModel->SetAttribute ("Margin", DoubleValue (5));
   frameCaptureModel->SetAttribute ("CaptureWindow", TimeValue (MicroSeconds (16)));
   m_phy->SetFrameCaptureModel (frameCaptureModel);
-}
-
-void
-TestThresholdPreambleDetectionWithFrameCapture::DoTeardown (void)
-{
-  m_phy->Dispose ();
-  m_phy = 0;
 }
 
 void
@@ -940,11 +905,10 @@ public:
   virtual ~TestSimpleFrameCaptureModel ();
 
 protected:
-  void DoSetup (void) override;
-  void DoTeardown (void) override;
+  virtual void DoSetup (void);
 
 private:
-  void DoRun (void) override;
+  virtual void DoRun (void);
 
   /**
    * Reset function
@@ -959,12 +923,11 @@ private:
   /**
    * Spectrum wifi receive success function
    * \param psdu the PSDU
-   * \param rxSignalInfo the info on the received signal (\see RxSignalInfo)
+   * \param snr the SNR
    * \param txVector the transmit vector
    * \param statusPerMpdu reception status per MPDU
    */
-  void RxSuccess (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                  WifiTxVector txVector, std::vector<bool> statusPerMpdu);
+  void RxSuccess (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu);
   /**
    * RX dropped function
    * \param p the packet
@@ -995,8 +958,6 @@ private:
   bool m_rxSuccess1500B; ///< count received packets with 1500B payload
   bool m_rxDropped1000B; ///< count dropped packets with 1000B payload
   bool m_rxDropped1500B; ///< count dropped packets with 1500B payload
-
-  uint64_t m_uid; //!< the UID to use for the PPDU
 };
 
 TestSimpleFrameCaptureModel::TestSimpleFrameCaptureModel ()
@@ -1004,15 +965,14 @@ TestSimpleFrameCaptureModel::TestSimpleFrameCaptureModel ()
   m_rxSuccess1000B (false),
   m_rxSuccess1500B (false),
   m_rxDropped1000B (false),
-  m_rxDropped1500B (false),
-  m_uid (0)
+  m_rxDropped1500B (false)
 {
 }
 
 void
 TestSimpleFrameCaptureModel::SendPacket (double rxPowerDbm, uint32_t packetSize)
 {
-  WifiTxVector txVector = WifiTxVector (HePhy::GetHeMcs0 (), 0, WIFI_PREAMBLE_HE_SU, 800, 1, 1, 0, 20, false);
+  WifiTxVector txVector = WifiTxVector (WifiPhy::GetHeMcs0 (), 0, WIFI_PREAMBLE_HE_SU, 800, 1, 1, 0, 20, false, false);
   
   Ptr<Packet> pkt = Create<Packet> (packetSize);
   WifiMacHeader hdr;
@@ -1021,9 +981,9 @@ TestSimpleFrameCaptureModel::SendPacket (double rxPowerDbm, uint32_t packetSize)
   hdr.SetQosTid (0);
 
   Ptr<WifiPsdu> psdu = Create<WifiPsdu> (pkt, hdr);
-  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetPhyBand ());
+  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetFrequency ());
 
-  Ptr<WifiPpdu> ppdu = Create<HePpdu> (psdu, txVector, txDuration, WIFI_PHY_BAND_5GHZ, m_uid++);
+  Ptr<WifiPpdu> ppdu = Create<WifiPpdu> (psdu, txVector, txDuration, FREQUENCY);
 
   Ptr<SpectrumValue> txPowerSpectrum = WifiSpectrumValueHelper::CreateHeOfdmTxPowerSpectralDensity (FREQUENCY, CHANNEL_WIDTH, DbmToW (rxPowerDbm), GUARD_WIDTH);
 
@@ -1037,10 +997,9 @@ TestSimpleFrameCaptureModel::SendPacket (double rxPowerDbm, uint32_t packetSize)
 }
 
 void
-TestSimpleFrameCaptureModel::RxSuccess (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                                        WifiTxVector txVector, std::vector<bool> statusPerMpdu)
+TestSimpleFrameCaptureModel::RxSuccess (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu)
 {
-  NS_LOG_FUNCTION (this << *psdu << rxSignalInfo << txVector);
+  NS_LOG_FUNCTION (this << *psdu << snr << txVector);
   NS_ASSERT (!psdu->IsAggregate () || psdu->IsSingle ());
   if (psdu->GetSize () == 1030)
     {
@@ -1107,7 +1066,7 @@ void
 TestSimpleFrameCaptureModel::DoSetup (void)
 {
   m_phy = CreateObject<SpectrumWifiPhy> ();
-  m_phy->ConfigureStandardAndBand (WIFI_PHY_STANDARD_80211ax, WIFI_PHY_BAND_5GHZ);
+  m_phy->ConfigureStandard (WIFI_PHY_STANDARD_80211ax_5GHZ);
   Ptr<ErrorRateModel> error = CreateObject<NistErrorRateModel> ();
   m_phy->SetErrorRateModel (error);
   m_phy->SetChannelNumber (CHANNEL_NUMBER);
@@ -1124,13 +1083,6 @@ TestSimpleFrameCaptureModel::DoSetup (void)
   frameCaptureModel->SetAttribute ("Margin", DoubleValue (5));
   frameCaptureModel->SetAttribute ("CaptureWindow", TimeValue (MicroSeconds (16)));
   m_phy->SetFrameCaptureModel (frameCaptureModel);
-}
-
-void
-TestSimpleFrameCaptureModel::DoTeardown (void)
-{
-  m_phy->Dispose ();
-  m_phy = 0;
 }
 
 void
@@ -1193,8 +1145,7 @@ public:
   virtual ~TestPhyHeadersReception ();
 
 protected:
-  void DoSetup (void) override;
-  void DoTeardown (void) override;
+  virtual void DoSetup (void);
   Ptr<SpectrumWifiPhy> m_phy; ///< Phy
   /**
    * Send packet function
@@ -1203,7 +1154,7 @@ protected:
   void SendPacket (double rxPowerDbm);
 
 private:
-  void DoRun (void) override;
+  virtual void DoRun (void);
 
   /**
    * Schedule now to check  the PHY state
@@ -1215,20 +1166,17 @@ private:
    * \param expectedState the expected PHY state
    */
   void DoCheckPhyState (WifiPhyState expectedState);
-
-  uint64_t m_uid; //!< the UID to use for the PPDU
 };
 
 TestPhyHeadersReception::TestPhyHeadersReception ()
-: TestCase ("PHY headers reception test"),
-  m_uid (0)
+: TestCase ("PHY headers reception test")
 {
 }
 
 void
 TestPhyHeadersReception::SendPacket (double rxPowerDbm)
 {
-  WifiTxVector txVector = WifiTxVector (HePhy::GetHeMcs7 (), 0, WIFI_PREAMBLE_HE_SU, 800, 1, 1, 0, 20, false);
+  WifiTxVector txVector = WifiTxVector (WifiPhy::GetHeMcs7 (), 0, WIFI_PREAMBLE_HE_SU, 800, 1, 1, 0, 20, false, false);
 
   Ptr<Packet> pkt = Create<Packet> (1000);
   WifiMacHeader hdr;
@@ -1237,9 +1185,9 @@ TestPhyHeadersReception::SendPacket (double rxPowerDbm)
   hdr.SetQosTid (0);
 
   Ptr<WifiPsdu> psdu = Create<WifiPsdu> (pkt, hdr);
-  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetPhyBand ());
+  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetFrequency ());
 
-  Ptr<WifiPpdu> ppdu = Create<HePpdu> (psdu, txVector, txDuration, WIFI_PHY_BAND_5GHZ, m_uid++);
+  Ptr<WifiPpdu> ppdu = Create<WifiPpdu> (psdu, txVector, txDuration, FREQUENCY);
 
   Ptr<SpectrumValue> txPowerSpectrum = WifiSpectrumValueHelper::CreateHeOfdmTxPowerSpectralDensity (FREQUENCY, CHANNEL_WIDTH, DbmToW (rxPowerDbm), GUARD_WIDTH);
 
@@ -1281,18 +1229,11 @@ void
 TestPhyHeadersReception::DoSetup (void)
 {
   m_phy = CreateObject<SpectrumWifiPhy> ();
-  m_phy->ConfigureStandardAndBand (WIFI_PHY_STANDARD_80211ax, WIFI_PHY_BAND_5GHZ);
+  m_phy->ConfigureStandard (WIFI_PHY_STANDARD_80211ax_5GHZ);
   Ptr<ErrorRateModel> error = CreateObject<NistErrorRateModel> ();
   m_phy->SetErrorRateModel (error);
   m_phy->SetChannelNumber (CHANNEL_NUMBER);
   m_phy->SetFrequency (FREQUENCY);
-}
-
-void
-TestPhyHeadersReception::DoTeardown (void)
-{
-  m_phy->Dispose ();
-  m_phy = 0;
 }
 
 void
@@ -1445,21 +1386,19 @@ public:
   virtual ~TestAmpduReception ();
 
 protected:
-  void DoSetup (void) override;
-  void DoTeardown (void) override;
+  virtual void DoSetup (void);
 
 private:
-  void DoRun (void) override;
+  virtual void DoRun (void);
 
   /**
    * RX success function
    * \param psdu the PSDU
-   * \param rxSignalInfo the info on the received signal (\see RxSignalInfo)
+   * \param snr the SNR
    * \param txVector the transmit vector
    * \param statusPerMpdu reception status per MPDU
    */
-  void RxSuccess (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                  WifiTxVector txVector, std::vector<bool> statusPerMpdu);
+  void RxSuccess (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu);
   /**
    * RX failure function
    * \param psdu the PSDU
@@ -1541,8 +1480,6 @@ private:
 
   uint8_t m_rxDroppedBitmapAmpdu1; ///< bitmap of dropped MPDUs in A-MPDU #1
   uint8_t m_rxDroppedBitmapAmpdu2; ///< bitmap of dropped MPDUs in A-MPDU #2
-
-  uint64_t m_uid;                  ///< UID
 };
 
 TestAmpduReception::TestAmpduReception ()
@@ -1552,8 +1489,7 @@ TestAmpduReception::TestAmpduReception ()
   m_rxFailureBitmapAmpdu1 (0),
   m_rxFailureBitmapAmpdu2 (0),
   m_rxDroppedBitmapAmpdu1 (0),
-  m_rxDroppedBitmapAmpdu2 (0),
-  m_uid (0)
+  m_rxDroppedBitmapAmpdu2 (0)
 {
 }
 
@@ -1574,14 +1510,9 @@ TestAmpduReception::ResetBitmaps()
 }
 
 void
-TestAmpduReception::RxSuccess (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                               WifiTxVector txVector, std::vector<bool> statusPerMpdu)
+TestAmpduReception::RxSuccess (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu)
 {
-  NS_LOG_FUNCTION (this << *psdu << rxSignalInfo << txVector);
-  if (statusPerMpdu.empty ()) //wait for the whole A-MPDU
-    {
-      return;
-    }
+  NS_LOG_FUNCTION (this << *psdu << snr << txVector);
   NS_ABORT_MSG_IF (psdu->GetNMpdus () != statusPerMpdu.size (), "Should have one receive status per MPDU");
   auto rxOkForMpdu = statusPerMpdu.begin ();
   for (auto mpdu = psdu->begin (); mpdu != psdu->end (); ++mpdu)
@@ -1746,7 +1677,7 @@ TestAmpduReception::CheckPhyState (WifiPhyState expectedState)
 void
 TestAmpduReception::SendAmpduWithThreeMpdus (double rxPowerDbm, uint32_t referencePacketSize)
 {
-  WifiTxVector txVector = WifiTxVector (HePhy::GetHeMcs0 (), 0, WIFI_PREAMBLE_HE_SU, 800, 1, 1, 0, 20, true);
+  WifiTxVector txVector = WifiTxVector (WifiPhy::GetHeMcs0 (), 0, WIFI_PREAMBLE_HE_SU, 800, 1, 1, 0, 20, true, false);
 
   WifiMacHeader hdr;
   hdr.SetType (WIFI_MAC_QOSDATA);
@@ -1760,9 +1691,9 @@ TestAmpduReception::SendAmpduWithThreeMpdus (double rxPowerDbm, uint32_t referen
     }
   Ptr<WifiPsdu> psdu = Create<WifiPsdu> (mpduList);
   
-  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetPhyBand ());
+  Time txDuration = m_phy->CalculateTxDuration (psdu->GetSize (), txVector, m_phy->GetFrequency ());
 
-  Ptr<WifiPpdu> ppdu = Create<HePpdu> (psdu, txVector, txDuration, WIFI_PHY_BAND_5GHZ, m_uid++);
+  Ptr<WifiPpdu> ppdu = Create<WifiPpdu> (psdu, txVector, txDuration, FREQUENCY);
 
   Ptr<SpectrumValue> txPowerSpectrum = WifiSpectrumValueHelper::CreateHeOfdmTxPowerSpectralDensity (FREQUENCY, CHANNEL_WIDTH, DbmToW (rxPowerDbm), GUARD_WIDTH);
 
@@ -1779,7 +1710,7 @@ void
 TestAmpduReception::DoSetup (void)
 {
   m_phy = CreateObject<SpectrumWifiPhy> ();
-  m_phy->ConfigureStandardAndBand (WIFI_PHY_STANDARD_80211ax, WIFI_PHY_BAND_5GHZ);
+  m_phy->ConfigureStandard (WIFI_PHY_STANDARD_80211ax_5GHZ);
   Ptr<ErrorRateModel> error = CreateObject<NistErrorRateModel> ();
   m_phy->SetErrorRateModel (error);
   m_phy->SetChannelNumber (CHANNEL_NUMBER);
@@ -1797,13 +1728,6 @@ TestAmpduReception::DoSetup (void)
   frameCaptureModel->SetAttribute ("Margin", DoubleValue (5));
   frameCaptureModel->SetAttribute ("CaptureWindow", TimeValue (MicroSeconds (16)));
   m_phy->SetFrameCaptureModel (frameCaptureModel);
-}
-
-void
-TestAmpduReception::DoTeardown (void)
-{
-  m_phy->Dispose ();
-  m_phy = 0;
 }
 
 void
@@ -2354,206 +2278,6 @@ TestAmpduReception::DoRun (void)
  * \ingroup wifi-test
  * \ingroup tests
  *
- * \brief Unsupported Modulation Reception Test
- * This test creates a mixed network, in which an HE STA and a VHT
- * STA are associated to an HE AP and send uplink traffic. In the
- * simulated deployment the VHT STA's backoff will expire while the
- * HE STA is sending a packet, and the VHT STA will access the
- * channel anyway. This happens because the HE STA is using an HeMcs
- * that the VHT STA is not able to demodulate: the VHT STA will
- * correctly stop listening to the HE packet, but it will not update
- * its InterferenceHelper with the HE packet. Later on, this leads to
- * the STA wrongly assuming the medium is available when its back-off
- * expires in the middle of the HE packet. We detect that this is
- * happening by looking at the reason why the AP is failing to decode
- * the preamble from the VHT STA's transmission: if the reason is
- * that it's in RX already, the test fails. The test is based on
- * wifi-txop-test.cc.
-*/
-class TestUnsupportedModulationReception : public TestCase
-{
-public:
-  /**
-   * Constructor
-   */
-  TestUnsupportedModulationReception ();
-  virtual ~TestUnsupportedModulationReception ();
-
-  /**
-   * Callback invoked when PHY drops an incoming packet
-   * \param context the context
-   * \param packet the packet that was dropped
-   * \param reason the reason the packet was dropped
-   */
-  void Dropped (std::string context, Ptr<const Packet> packet, WifiPhyRxfailureReason reason);
-  /**
-   * Check correctness of transmitted frames
-   */
-  void CheckResults (void);
-
-private:
-  void DoRun (void) override;
-  uint16_t m_dropped; ///< number of packets dropped by the AP because it was already receiving
-};
-
-TestUnsupportedModulationReception::TestUnsupportedModulationReception ()
-  : TestCase ("Check correct behavior when a STA is receiving a transmission using an unsupported modulation"),
-    m_dropped (0)
-{
-}
-
-TestUnsupportedModulationReception::~TestUnsupportedModulationReception ()
-{
-}
-
-void
-TestUnsupportedModulationReception::Dropped (std::string context, Ptr<const Packet> packet,
-                                             WifiPhyRxfailureReason reason)
-{
-  // Print if the test is executed through test-runner
-  if (reason == RXING)
-    {
-      std::cout << "Dropped a packet because already receiving" << std::endl;
-      m_dropped++;
-    }
-}
-
-void
-TestUnsupportedModulationReception::DoRun (void)
-{
-  uint16_t m_nStations = 2; ///< number of stations
-  NetDeviceContainer m_staDevices; ///< container for stations' NetDevices
-  NetDeviceContainer m_apDevices; ///< container for AP's NetDevice
-
-  // RngSeedManager::SetSeed (1);
-  // RngSeedManager::SetRun (40);
-  int64_t streamNumber = 100;
-
-  NodeContainer wifiApNode;
-  wifiApNode.Create (1);
-
-  NodeContainer wifiStaNodes;
-  wifiStaNodes.Create (m_nStations);
-
-  Ptr<MultiModelSpectrumChannel> spectrumChannel = CreateObject<MultiModelSpectrumChannel> ();
-  Ptr<FriisPropagationLossModel> lossModel = CreateObject<FriisPropagationLossModel> ();
-  spectrumChannel->AddPropagationLossModel (lossModel);
-  Ptr<ConstantSpeedPropagationDelayModel> delayModel =
-      CreateObject<ConstantSpeedPropagationDelayModel> ();
-  spectrumChannel->SetPropagationDelayModel (delayModel);
-
-  SpectrumWifiPhyHelper phy;
-  phy.SetChannel (spectrumChannel);
-
-  Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", UintegerValue (65535));
-
-  WifiHelper wifi;
-  wifi.SetRemoteStationManager ("ns3::IdealWifiManager");
-
-  WifiMacHelper mac;
-  mac.SetType ("ns3::StaWifiMac", "QosSupported", BooleanValue (true), "Ssid",
-               SsidValue (Ssid ("non-existent-ssid")));
-
-  wifi.SetStandard (WIFI_STANDARD_80211ax_5GHZ);
-  m_staDevices.Add (wifi.Install (phy, mac, wifiStaNodes.Get (0)));
-  wifi.SetStandard (WIFI_STANDARD_80211ac);
-  m_staDevices.Add (wifi.Install (phy, mac, wifiStaNodes.Get (1)));
-
-  wifi.SetStandard (WIFI_STANDARD_80211ax_5GHZ);
-  mac.SetType ("ns3::ApWifiMac", "QosSupported", BooleanValue (true), "Ssid",
-               SsidValue (Ssid ("wifi-backoff-ssid")), "BeaconInterval",
-               TimeValue (MicroSeconds (102400)), "EnableBeaconJitter", BooleanValue (false));
-
-  m_apDevices = wifi.Install (phy, mac, wifiApNode);
-
-  // schedule association requests at different times
-  Time init = MilliSeconds (100);
-  Ptr<WifiNetDevice> dev;
-
-  for (uint16_t i = 0; i < m_nStations; i++)
-    {
-      dev = DynamicCast<WifiNetDevice> (m_staDevices.Get (i));
-      Simulator::Schedule (init + i * MicroSeconds (102400), &WifiMac::SetSsid, dev->GetMac (),
-                           Ssid ("wifi-backoff-ssid"));
-    }
-
-  // Assign fixed streams to random variables in use
-  wifi.AssignStreams (m_apDevices, streamNumber);
-
-  MobilityHelper mobility;
-  Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
-
-  positionAlloc->Add (Vector (0.0, 0.0, 0.0));
-  positionAlloc->Add (Vector (1.0, 0.0, 0.0));
-  positionAlloc->Add (Vector (0.0, 1.0, 0.0));
-  positionAlloc->Add (Vector (-1.0, 0.0, 0.0));
-  mobility.SetPositionAllocator (positionAlloc);
-
-  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobility.Install (wifiApNode);
-  mobility.Install (wifiStaNodes);
-
-  // set the TXOP limit on BE AC
-  dev = DynamicCast<WifiNetDevice> (m_apDevices.Get (0));
-  PointerValue ptr;
-  dev->GetMac ()->GetAttribute ("BE_Txop", ptr);
-
-  PacketSocketHelper packetSocket;
-  packetSocket.Install (wifiApNode);
-  packetSocket.Install (wifiStaNodes);
-
-  // UL Traffic
-  for (uint16_t i = 0; i < m_nStations; i++)
-    {
-      PacketSocketAddress socket;
-      socket.SetSingleDevice (m_staDevices.Get (0)->GetIfIndex ());
-      socket.SetPhysicalAddress (m_apDevices.Get (0)->GetAddress ());
-      socket.SetProtocol (1);
-      Ptr<PacketSocketClient> client = CreateObject<PacketSocketClient> ();
-      client->SetAttribute ("PacketSize", UintegerValue (1500));
-      client->SetAttribute ("MaxPackets", UintegerValue (200));
-      client->SetAttribute ("Interval", TimeValue (MicroSeconds (0)));
-      client->SetRemote (socket);
-      wifiStaNodes.Get (i)->AddApplication (client);
-      client->SetStartTime (MicroSeconds (400000));
-      client->SetStopTime (Seconds (1.0));
-      Ptr<PacketSocketClient> legacyStaClient = CreateObject<PacketSocketClient> ();
-      legacyStaClient->SetAttribute ("PacketSize", UintegerValue (1500));
-      legacyStaClient->SetAttribute ("MaxPackets", UintegerValue (200));
-      legacyStaClient->SetAttribute ("Interval", TimeValue (MicroSeconds (0)));
-      legacyStaClient->SetRemote (socket);
-      wifiStaNodes.Get (i)->AddApplication (legacyStaClient);
-      legacyStaClient->SetStartTime (MicroSeconds (400000));
-      legacyStaClient->SetStopTime (Seconds (1.0));
-      Ptr<PacketSocketServer> server = CreateObject<PacketSocketServer> ();
-      server->SetLocal (socket);
-      wifiApNode.Get (0)->AddApplication (server);
-      server->SetStartTime (Seconds (0.0));
-      server->SetStopTime (Seconds (1.0));
-    }
-
-  // Trace dropped packets
-  Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/PhyRxDrop",
-                   MakeCallback (&TestUnsupportedModulationReception::Dropped, this));
-
-  Simulator::Stop (Seconds (1));
-  Simulator::Run ();
-
-  CheckResults ();
-
-  Simulator::Destroy ();
-}
-
-void
-TestUnsupportedModulationReception::CheckResults (void)
-{
-  NS_TEST_EXPECT_MSG_EQ (m_dropped, 0, "Dropped some packets unexpectedly");
-}
-
-/**
- * \ingroup wifi-test
- * \ingroup tests
- *
  * \brief wifi PHY reception Test Suite
  */
 class WifiPhyReceptionTestSuite : public TestSuite
@@ -2570,7 +2294,6 @@ WifiPhyReceptionTestSuite::WifiPhyReceptionTestSuite ()
   AddTestCase (new TestSimpleFrameCaptureModel, TestCase::QUICK);
   AddTestCase (new TestPhyHeadersReception, TestCase::QUICK);
   AddTestCase (new TestAmpduReception, TestCase::QUICK);
-  AddTestCase (new TestUnsupportedModulationReception (), TestCase::QUICK);
 }
 
 static WifiPhyReceptionTestSuite wifiPhyReceptionTestSuite; ///< the test suite

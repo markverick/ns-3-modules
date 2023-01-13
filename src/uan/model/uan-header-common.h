@@ -28,15 +28,10 @@
 
 namespace ns3 {
 
-/**
- * \ingroup uan
- *
- *  UAN protocol descriptor
- */
 struct UanProtocolBits
 {
-  uint8_t  m_type : 4;            //!< type (4 bits)
-  uint8_t  m_protocolNumber : 4;  //!< protocol number (4 bits)
+  uint8_t  m_type : 4;
+  uint8_t  m_protocolNumber : 4;
 };
 
 /**

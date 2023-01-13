@@ -66,12 +66,11 @@ private:
   /**
    * Send receive function
    * \param psdu the PSDU
-   * \param rxSignalInfo the info on the received signal (\see RxSignalInfo)
+   * \param snr the SNR
    * \param txVector the wifi transmit vector
    * \param statusPerMpdu reception status per MPDU
    */
-  void Receive (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                WifiTxVector txVector, std::vector<bool> statusPerMpdu);
+  void Receive (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu);
   Ptr<WifiPhy> m_tx; ///< transmit
   struct Input m_input; ///< input
   struct Output m_output; ///< output
@@ -90,8 +89,7 @@ PsrExperiment::Send (void)
 }
 
 void
-PsrExperiment::Receive (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                        WifiTxVector txVector, std::vector<bool> statusPerMpdu)
+PsrExperiment::Receive (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu)
 {
   m_output.received++;
 }
@@ -134,8 +132,8 @@ PsrExperiment::Run (struct PsrExperiment::Input input)
   tx->SetMobility (posTx);
   rx->SetMobility (posRx);
 
-  tx->ConfigureStandardAndBand (WIFI_PHY_STANDARD_80211a, WIFI_PHY_BAND_5GHZ);
-  rx->ConfigureStandardAndBand (WIFI_PHY_STANDARD_80211a, WIFI_PHY_BAND_5GHZ);
+  tx->ConfigureStandard (WIFI_PHY_STANDARD_80211a);
+  rx->ConfigureStandard (WIFI_PHY_STANDARD_80211a);
 
   rx->SetReceiveOkCallback (MakeCallback (&PsrExperiment::Receive, this));
 
@@ -190,12 +188,11 @@ private:
   /**
    * Receive function
    * \param psdu the PSDU
-   * \param rxSignalInfo the info on the received signal (\see RxSignalInfo)
+   * \param snr the SNR
    * \param txVector the wifi transmit vector
    * \param statusPerMpdu reception status per MPDU
    */
-  void Receive (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                WifiTxVector txVector, std::vector<bool> statusPerMpdu);
+  void Receive (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu);
   Ptr<WifiPhy> m_txA; ///< transmit A
   Ptr<WifiPhy> m_txB; ///< transmit B
   uint32_t m_flowIdA; ///< flow ID A
@@ -229,8 +226,7 @@ CollisionExperiment::SendB (void) const
 }
 
 void
-CollisionExperiment::Receive (Ptr<WifiPsdu> psdu, RxSignalInfo rxSignalInfo,
-                              WifiTxVector txVector, std::vector<bool> statusPerMpdu)
+CollisionExperiment::Receive (Ptr<WifiPsdu> psdu, double snr, WifiTxVector txVector, std::vector<bool> statusPerMpdu)
 {
   FlowIdTag tag;
   if ((*psdu->begin ())->GetPacket ()->FindFirstMatchingByteTag (tag))
@@ -300,9 +296,9 @@ CollisionExperiment::Run (struct CollisionExperiment::Input input)
   txB->SetMobility (posTxB);
   rx->SetMobility (posRx);
 
-  txA->ConfigureStandardAndBand (WIFI_PHY_STANDARD_80211a, WIFI_PHY_BAND_5GHZ);
-  txB->ConfigureStandardAndBand (WIFI_PHY_STANDARD_80211a, WIFI_PHY_BAND_5GHZ);
-  rx->ConfigureStandardAndBand (WIFI_PHY_STANDARD_80211a, WIFI_PHY_BAND_5GHZ);
+  txA->ConfigureStandard (WIFI_PHY_STANDARD_80211a);
+  txB->ConfigureStandard (WIFI_PHY_STANDARD_80211a);
+  rx->ConfigureStandard (WIFI_PHY_STANDARD_80211a);
 
   rx->SetReceiveOkCallback (MakeCallback (&CollisionExperiment::Receive, this));
 

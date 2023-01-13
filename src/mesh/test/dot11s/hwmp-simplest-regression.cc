@@ -118,7 +118,7 @@ HwmpSimplestRegressionTest::CreateDevices ()
 {
   int64_t streamsUsed = 0;
   // 1. setup WiFi
-  YansWifiPhyHelper wifiPhy;
+  YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
   Ptr<YansWifiChannel> chan = wifiChannel.Create ();
   wifiPhy.SetChannel (chan);

@@ -26,7 +26,6 @@
 #include "ns3/trace-helper.h"
 #include "ns3/wifi-phy.h"
 #include "ns3/qos-utils.h"
-#include "ns3/deprecated.h"
 #include "wifi-mac-helper.h"
 #include <functional>
 
@@ -208,7 +207,6 @@ protected:
    * \param channelFreqMhz the channel frequency
    * \param txVector the TXVECTOR
    * \param aMpdu the A-MPDU information
-   * \param staId the STA-ID (only used for MU)
    *
    * Handle TX pcap.
    */
@@ -216,8 +214,7 @@ protected:
                                 Ptr<const Packet> packet,
                                 uint16_t channelFreqMhz,
                                 WifiTxVector txVector,
-                                MpduInfo aMpdu,
-                                uint16_t staId = SU_STA_ID);
+                                MpduInfo aMpdu);
   /**
    * \param file the pcap file wrapper
    * \param packet the packet
@@ -225,7 +222,6 @@ protected:
    * \param txVector the TXVECTOR
    * \param aMpdu the A-MPDU information
    * \param signalNoise the RX signal and noise information
-   * \param staId the STA-ID (only used for MU)
    *
    * Handle RX pcap.
    */
@@ -234,8 +230,7 @@ protected:
                                 uint16_t channelFreqMhz,
                                 WifiTxVector txVector,
                                 MpduInfo aMpdu,
-                                SignalNoiseDbm signalNoise,
-                                uint16_t staId = SU_STA_ID);
+                                SignalNoiseDbm signalNoise);
 
   ObjectFactory m_phy; ///< PHY object
   ObjectFactory m_errorRateModel; ///< error rate model
@@ -245,40 +240,19 @@ protected:
 
 private:
   /**
-   * Get the Radiotap header for a transmitted packet.
+   * Get the Radiotap header.
    *
-   * \param header the radiotap header to be filled in
    * \param packet the packet
    * \param channelFreqMhz the channel frequency
    * \param txVector the TXVECTOR
    * \param aMpdu the A-MPDU information
-   * \param staId the STA-ID
-   */
-  static void GetRadiotapHeader (RadiotapHeader &header,
-                                 Ptr<Packet> packet,
-                                 uint16_t channelFreqMhz,
-                                 WifiTxVector txVector,
-                                 MpduInfo aMpdu,
-                                 uint16_t staId);
-
-  /**
-   * Get the Radiotap header for a received packet.
    *
-   * \param header the radiotap header to be filled in
-   * \param packet the packet
-   * \param channelFreqMhz the channel frequency
-   * \param txVector the TXVECTOR
-   * \param aMpdu the A-MPDU information
-   * \param staId the STA-ID
-   * \param signalNoise the rx signal and noise information
+   * \returns the Radiotap header
    */
-  static void GetRadiotapHeader (RadiotapHeader &header,
-                                 Ptr<Packet> packet,
-                                 uint16_t channelFreqMhz,
-                                 WifiTxVector txVector,
-                                 MpduInfo aMpdu,
-                                 uint16_t staId,
-                                 SignalNoiseDbm signalNoise);
+  static RadiotapHeader GetRadiotapHeader (Ptr<Packet> packet,
+                                           uint16_t channelFreqMhz,
+                                           WifiTxVector txVector,
+                                           MpduInfo aMpdu);
 
   /**
    * \brief Enable pcap output the indicated net device.
@@ -294,7 +268,7 @@ private:
   virtual void EnablePcapInternal (std::string prefix,
                                    Ptr<NetDevice> nd,
                                    bool promiscuous,
-                                   bool explicitFilename) override;
+                                   bool explicitFilename);
 
   /**
    * \brief Enable ASCII trace output on the indicated net device.
@@ -310,7 +284,7 @@ private:
   virtual void EnableAsciiInternal (Ptr<OutputStreamWrapper> stream,
                                     std::string prefix,
                                     Ptr<NetDevice> nd,
-                                    bool explicitFilename) override;
+                                    bool explicitFilename);
 
   PcapHelper::DataLinkType m_pcapDlt; ///< PCAP data link type
 };
@@ -402,6 +376,39 @@ public:
                            std::string n6 = "", const AttributeValue &v6 = EmptyAttributeValue (),
                            std::string n7 = "", const AttributeValue &v7 = EmptyAttributeValue ());
 
+  /**
+   * \param ac the Access Category to attach the ack policy selector to.
+   * \param type the type of ns3::WifiAckPolicySelector to create.
+   * \param n0 the name of the attribute to set
+   * \param v0 the value of the attribute to set
+   * \param n1 the name of the attribute to set
+   * \param v1 the value of the attribute to set
+   * \param n2 the name of the attribute to set
+   * \param v2 the value of the attribute to set
+   * \param n3 the name of the attribute to set
+   * \param v3 the value of the attribute to set
+   * \param n4 the name of the attribute to set
+   * \param v4 the value of the attribute to set
+   * \param n5 the name of the attribute to set
+   * \param v5 the value of the attribute to set
+   * \param n6 the name of the attribute to set
+   * \param v6 the value of the attribute to set
+   * \param n7 the name of the attribute to set
+   * \param v7 the value of the attribute to set
+   *
+   * All the attributes specified in this method should exist
+   * in the requested ack policy selector.
+   */
+  void SetAckPolicySelectorForAc (AcIndex ac, std::string type,
+                                  std::string n0 = "", const AttributeValue &v0 = EmptyAttributeValue (),
+                                  std::string n1 = "", const AttributeValue &v1 = EmptyAttributeValue (),
+                                  std::string n2 = "", const AttributeValue &v2 = EmptyAttributeValue (),
+                                  std::string n3 = "", const AttributeValue &v3 = EmptyAttributeValue (),
+                                  std::string n4 = "", const AttributeValue &v4 = EmptyAttributeValue (),
+                                  std::string n5 = "", const AttributeValue &v5 = EmptyAttributeValue (),
+                                  std::string n6 = "", const AttributeValue &v6 = EmptyAttributeValue (),
+                                  std::string n7 = "", const AttributeValue &v7 = EmptyAttributeValue ());
+
   /// Callback invoked to determine the MAC queue selected for a given packet
   typedef std::function<std::size_t (Ptr<QueueItem>)> SelectQueueCallback;
 
@@ -449,7 +456,7 @@ public:
   virtual NetDeviceContainer Install (const WifiPhyHelper &phy,
                                       const WifiMacHelper &mac, std::string nodeName) const;
   /**
-   * \param standard the standard to configure during installation
+   * \param standard the PHY standard to configure during installation
    *
    * This method sets standards-compliant defaults for WifiMac
    * parameters such as SIFS time, slot time, timeout values, etc.,
@@ -472,7 +479,7 @@ public:
    * \sa WifiMac::ConfigureStandard
    * \sa Config::Set
    */
-  virtual void SetStandard (WifiStandard standard);
+  virtual void SetStandard (WifiPhyStandard standard);
 
   /**
    * Helper to enable all WifiNetDevice log components with one statement
@@ -499,7 +506,7 @@ public:
 protected:
   ObjectFactory m_stationManager;            ///< station manager
   ObjectFactory m_ackPolicySelector[4];      ///< ack policy selector for all ACs
-  WifiStandard m_standard;                   ///< wifi standard
+  WifiPhyStandard m_standard;                ///< wifi standard
   SelectQueueCallback m_selectQueueCallback; ///< select queue callback
   ObjectFactory m_obssPdAlgorithm;           ///< OBSS_PD algorithm
 };

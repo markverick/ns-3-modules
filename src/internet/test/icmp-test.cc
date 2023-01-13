@@ -100,21 +100,13 @@ public:
   IcmpEchoReplyTestCase ();
   virtual ~IcmpEchoReplyTestCase ();
 
-  /**
-   * Send data
-   * \param socket output socket
-   * \param dst destination address
-   */
   void SendData (Ptr<Socket> socket, Ipv4Address dst);
-  /**
-   * Receive data
-   * \param socket input socket
-   */
+  void DoSendData (Ptr<Socket> socket, Ipv4Address dst);
   void ReceivePkt (Ptr<Socket> socket);
 
 private:
   virtual void DoRun (void);
-  Ptr<Packet> m_receivedPacket; //!< received packet
+  Ptr<Packet> m_receivedPacket;
 
 };
 
@@ -133,7 +125,7 @@ IcmpEchoReplyTestCase::~IcmpEchoReplyTestCase ()
 
 
 void
-IcmpEchoReplyTestCase::SendData (Ptr<Socket> socket, Ipv4Address dst)
+IcmpEchoReplyTestCase::DoSendData (Ptr<Socket> socket, Ipv4Address dst)
 {
   Ptr<Packet> p = Create<Packet> ();
   Icmpv4Echo echo;
@@ -153,6 +145,15 @@ IcmpEchoReplyTestCase::SendData (Ptr<Socket> socket, Ipv4Address dst)
 
 }
 
+
+void
+IcmpEchoReplyTestCase::SendData (Ptr<Socket> socket, Ipv4Address dst)
+{
+  m_receivedPacket = Create<Packet> ();
+  Simulator::ScheduleWithContext (socket->GetNode ()->GetId (), Seconds (0),
+                                  &IcmpEchoReplyTestCase::DoSendData, this, socket, dst);
+  Simulator::Run ();
+}
 
 void
 IcmpEchoReplyTestCase::ReceivePkt (Ptr <Socket> socket)
@@ -209,9 +210,7 @@ IcmpEchoReplyTestCase::DoRun ()
 
   // Set a TTL big enough
   socket->SetIpTtl (1);
-  Simulator::ScheduleWithContext (socket->GetNode ()->GetId (), Seconds (0),
-                                  &IcmpEchoReplyTestCase::SendData, this, socket, i.GetAddress (1,0));
-  Simulator::Run ();
+  SendData (socket, i.GetAddress (1,0));
 
   NS_TEST_EXPECT_MSG_EQ (m_receivedPacket->GetSize (), 28, " Unexpected ICMPV4_ECHO_REPLY packet size");
 
@@ -232,21 +231,13 @@ public:
   IcmpTimeExceedTestCase ();
   virtual ~IcmpTimeExceedTestCase ();
 
-  /**
-   * Send data
-   * \param socket output socket
-   * \param dst destination address
-   */
   void SendData (Ptr<Socket> socket, Ipv4Address dst);
-  /**
-   * Receive data
-   * \param socket input socket
-   */
+  void DoSendData (Ptr<Socket> socket, Ipv4Address dst);
   void ReceivePkt (Ptr<Socket> socket);
 
 private:
   virtual void DoRun (void);
-  Ptr<Packet> m_receivedPacket; //!< received packet
+  Ptr<Packet> m_receivedPacket;
 
 };
 
@@ -265,7 +256,7 @@ IcmpTimeExceedTestCase::~IcmpTimeExceedTestCase ()
 
 
 void
-IcmpTimeExceedTestCase::SendData (Ptr<Socket> socket, Ipv4Address dst)
+IcmpTimeExceedTestCase::DoSendData (Ptr<Socket> socket, Ipv4Address dst)
 {
   Ptr<Packet> p = Create<Packet> ();
   Icmpv4Echo echo;
@@ -282,6 +273,16 @@ IcmpTimeExceedTestCase::SendData (Ptr<Socket> socket, Ipv4Address dst)
 
   NS_TEST_EXPECT_MSG_EQ (socket->SendTo (p, 0, realTo),
                          (int) p->GetSize (), " Unable to send ICMP Echo Packet");
+}
+
+
+void
+IcmpTimeExceedTestCase::SendData (Ptr<Socket> socket, Ipv4Address dst)
+{
+  m_receivedPacket = Create<Packet> ();
+  Simulator::ScheduleWithContext (socket->GetNode ()->GetId (), Seconds (0),
+                                  &IcmpTimeExceedTestCase::DoSendData, this, socket, dst);
+  Simulator::Run ();
 }
 
 
@@ -354,9 +355,7 @@ IcmpTimeExceedTestCase::DoRun ()
 
   // The ttl is not big enough , causing an ICMP Time Exceeded response
   socket->SetIpTtl (1);
-  Simulator::ScheduleWithContext (socket->GetNode ()->GetId (), Seconds (0),
-                                  &IcmpTimeExceedTestCase::SendData, this, socket, i2.GetAddress (1,0));
-  Simulator::Run ();
+  SendData (socket, i2.GetAddress (1,0));
 
   NS_TEST_EXPECT_MSG_EQ (m_receivedPacket->GetSize (), 56, " Unexpected ICMP Time Exceed Response packet size");
 
@@ -376,21 +375,13 @@ public:
   IcmpV6EchoReplyTestCase ();
   virtual ~IcmpV6EchoReplyTestCase ();
 
-  /**
-   * Send data
-   * \param socket output socket
-   * \param dst destination address
-   */
   void SendData (Ptr<Socket> socket, Ipv6Address dst);
-  /**
-   * Receive data
-   * \param socket input socket
-   */
+  void DoSendData (Ptr<Socket> socket, Ipv6Address dst);
   void ReceivePkt (Ptr<Socket> socket);
 
 private:
   virtual void DoRun (void);
-  Ptr<Packet> m_receivedPacket; //!< received packet
+  Ptr<Packet> m_receivedPacket;
 
 };
 
@@ -409,7 +400,7 @@ IcmpV6EchoReplyTestCase::~IcmpV6EchoReplyTestCase ()
 
 
 void
-IcmpV6EchoReplyTestCase::SendData (Ptr<Socket> socket, Ipv6Address dst)
+IcmpV6EchoReplyTestCase::DoSendData (Ptr<Socket> socket, Ipv6Address dst)
 {
   Ptr<Packet> p = Create<Packet> ();
   Icmpv6Echo echo (1);
@@ -429,6 +420,15 @@ IcmpV6EchoReplyTestCase::SendData (Ptr<Socket> socket, Ipv6Address dst)
 
 }
 
+
+void
+IcmpV6EchoReplyTestCase::SendData (Ptr<Socket> socket, Ipv6Address dst)
+{
+  m_receivedPacket = Create<Packet> ();
+  Simulator::ScheduleWithContext (socket->GetNode ()->GetId (), Seconds (0),
+                                  &IcmpV6EchoReplyTestCase::DoSendData, this, socket, dst);
+  Simulator::Run ();
+}
 
 void
 IcmpV6EchoReplyTestCase::ReceivePkt (Ptr <Socket> socket)
@@ -498,9 +498,7 @@ IcmpV6EchoReplyTestCase::DoRun ()
   // Set a TTL big enough
   socket->SetIpTtl (1);
 
-  Simulator::ScheduleWithContext (socket->GetNode ()->GetId (), Seconds (0),
-                                  &IcmpV6EchoReplyTestCase::SendData, this, socket, i.GetAddress (1,1));
-  Simulator::Run ();
+  SendData (socket, i.GetAddress (1,1));
 
   NS_TEST_EXPECT_MSG_EQ (m_receivedPacket->GetSize (), 72, " Unexpected ICMPV6_ECHO_REPLY packet size");
 
@@ -520,21 +518,13 @@ public:
   IcmpV6TimeExceedTestCase ();
   virtual ~IcmpV6TimeExceedTestCase ();
 
-  /**
-   * Send data
-   * \param socket output socket
-   * \param dst destination address
-   */
   void SendData (Ptr<Socket> socket, Ipv6Address dst);
-  /**
-   * Receive data
-   * \param socket input socket
-   */
+  void DoSendData (Ptr<Socket> socket, Ipv6Address dst);
   void ReceivePkt (Ptr<Socket> socket);
 
 private:
   virtual void DoRun (void);
-  Ptr<Packet> m_receivedPacket; //!< received packet
+  Ptr<Packet> m_receivedPacket;
 
 };
 
@@ -553,7 +543,7 @@ IcmpV6TimeExceedTestCase::~IcmpV6TimeExceedTestCase ()
 
 
 void
-IcmpV6TimeExceedTestCase::SendData (Ptr<Socket> socket, Ipv6Address dst)
+IcmpV6TimeExceedTestCase::DoSendData (Ptr<Socket> socket, Ipv6Address dst)
 {
   Ptr<Packet> p = Create<Packet> ();
   Icmpv6Echo echo (1);
@@ -573,6 +563,15 @@ IcmpV6TimeExceedTestCase::SendData (Ptr<Socket> socket, Ipv6Address dst)
 
 }
 
+
+void
+IcmpV6TimeExceedTestCase::SendData (Ptr<Socket> socket, Ipv6Address dst)
+{
+  m_receivedPacket = Create<Packet> ();
+  Simulator::ScheduleWithContext (socket->GetNode ()->GetId (), Seconds (0),
+                                  &IcmpV6TimeExceedTestCase::DoSendData, this, socket, dst);
+  Simulator::Run ();
+}
 
 void
 IcmpV6TimeExceedTestCase::ReceivePkt (Ptr <Socket> socket)
@@ -659,9 +658,7 @@ IcmpV6TimeExceedTestCase::DoRun ()
   // The hop limit is not big enough , causing an ICMPV6 Time Exceeded error
   socket->SetIpv6HopLimit (1);
 
-  Simulator::ScheduleWithContext (socket->GetNode ()->GetId (), Seconds (0),
-                                  &IcmpV6TimeExceedTestCase::SendData, this, socket, interfaces2.GetAddress (1,1));
-  Simulator::Run ();
+  SendData (socket, interfaces2.GetAddress (1,1));
 
   NS_TEST_EXPECT_MSG_EQ (m_receivedPacket->GetSize (), 72, " Unexpected ICMPV6_ECHO_REPLY packet size");
 

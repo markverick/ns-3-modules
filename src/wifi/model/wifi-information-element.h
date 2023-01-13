@@ -190,8 +190,6 @@ typedef uint8_t WifiInformationElementId;
 
 #define IE_EXT_HE_CAPABILITIES                  ((WifiInformationElementId)35)
 #define IE_EXT_HE_OPERATION                     ((WifiInformationElementId)36)
-#define IE_EXT_UORA_PARAMETER_SET               ((WifiInformationElementId)37)
-#define IE_EXT_MU_EDCA_PARAMETER_SET            ((WifiInformationElementId)38)
 
 /**
  * \brief Information element, as defined in 802.11-2007 standard
@@ -241,7 +239,7 @@ public:
    *
    * \return an iterator
    */
-  virtual Buffer::Iterator Serialize (Buffer::Iterator i) const;
+  Buffer::Iterator Serialize (Buffer::Iterator i) const;
   /**
    * Deserialize entire IE, which must be present. The iterator
    * passed in must be pointing at the Element ID (i.e., the very
@@ -270,7 +268,7 @@ public:
    *
    * \return the size of the serialized IE in bytes
    */
-  virtual uint16_t GetSerializedSize () const;
+  uint16_t GetSerializedSize () const;
 
   // Each subclass must implement these pure virtual functions:
   /**

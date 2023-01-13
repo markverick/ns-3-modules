@@ -50,11 +50,13 @@ public:
     CONFIRMATION_CODE_REJECT
   };
   /**
+   * \brief creates a service flow manager and attaches it to a device
+   * \param  device the device to which the service flow manager will be attached
+   */
+  /**
    * Constructor
    *
-   * Creates a service flow manager and attaches it to a device
-   *
-   * \param device the device to which the service flow manager will be attached
+   * \param device subscriber station device
    */
   SsServiceFlowManager (Ptr<SubscriberStationNetDevice> device);
   ~SsServiceFlowManager (void);

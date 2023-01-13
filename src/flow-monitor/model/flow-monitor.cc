@@ -302,7 +302,7 @@ FlowMonitor::GetFlowStats () const
 void
 FlowMonitor::CheckForLostPackets (Time maxDelay)
 {
-  NS_LOG_FUNCTION (this << maxDelay.As (Time::S));
+  NS_LOG_FUNCTION (this << maxDelay.GetSeconds ());
   Time now = Simulator::Now ();
 
   for (TrackedPacketMap::iterator iter = m_trackedPackets.begin ();
@@ -362,23 +362,23 @@ FlowMonitor::GetAllProbes () const
 void
 FlowMonitor::Start (const Time &time)
 {
-  NS_LOG_FUNCTION (this << time.As (Time::S));
+  NS_LOG_FUNCTION (this << time.GetSeconds ());
   if (m_enabled)
     {
       NS_LOG_DEBUG ("FlowMonitor already enabled; returning");
       return;
     }
   Simulator::Cancel (m_startEvent);
-  NS_LOG_DEBUG ("Scheduling start at " << time.As (Time::S));
+  NS_LOG_DEBUG ("Scheduling start at " << time.GetSeconds ());
   m_startEvent = Simulator::Schedule (time, &FlowMonitor::StartRightNow, this);
 }
 
 void
 FlowMonitor::Stop (const Time &time)
 {
-  NS_LOG_FUNCTION (this << time.As (Time::S));
+  NS_LOG_FUNCTION (this << time.GetSeconds ());
   Simulator::Cancel (m_stopEvent);
-  NS_LOG_DEBUG ("Scheduling stop at " << time.As (Time::S));
+  NS_LOG_DEBUG ("Scheduling stop at " << time.GetSeconds ());
   m_stopEvent = Simulator::Schedule (time, &FlowMonitor::StopRightNow, this);
 }
 
@@ -430,15 +430,14 @@ FlowMonitor::SerializeToXmlStream (std::ostream &os, uint16_t indent, bool enabl
     {
       os << std::string ( indent, ' ' );
 #define ATTRIB(name) << " " # name "=\"" << flowI->second.name << "\""
-#define ATTRIB_TIME(name) << " " #name "=\"" << flowI->second.name.As (Time::NS) << "\""
       os << "<Flow flowId=\"" << flowI->first << "\""
-      ATTRIB_TIME (timeFirstTxPacket)
-      ATTRIB_TIME (timeFirstRxPacket)
-      ATTRIB_TIME (timeLastTxPacket)
-      ATTRIB_TIME (timeLastRxPacket)
-      ATTRIB_TIME (delaySum)
-      ATTRIB_TIME (jitterSum)
-      ATTRIB_TIME (lastDelay)
+      ATTRIB (timeFirstTxPacket)
+      ATTRIB (timeFirstRxPacket)
+      ATTRIB (timeLastTxPacket)
+      ATTRIB (timeLastRxPacket)
+      ATTRIB (delaySum)
+      ATTRIB (jitterSum)
+      ATTRIB (lastDelay)
       ATTRIB (txBytes)
       ATTRIB (rxBytes)
       ATTRIB (txPackets)
@@ -446,7 +445,6 @@ FlowMonitor::SerializeToXmlStream (std::ostream &os, uint16_t indent, bool enabl
       ATTRIB (lostPackets)
       ATTRIB (timesForwarded)
       << ">\n";
-#undef ATTRIB_TIME
 #undef ATTRIB
 
       indent += 2;

@@ -42,9 +42,8 @@ public:
   /**
    * \brief Construct a GlobalRoutingHelper from another previously initialized
    * instance (Copy Constructor).
-   * \param o object to be copied
    */
-  Ipv4GlobalRoutingHelper (const Ipv4GlobalRoutingHelper &o);
+  Ipv4GlobalRoutingHelper (const Ipv4GlobalRoutingHelper &);
 
   /**
    * \returns pointer to clone of this Ipv4GlobalRoutingHelper

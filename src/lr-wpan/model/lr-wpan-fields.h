@@ -37,7 +37,6 @@
 namespace ns3 {
 
 /**
- * \ingroup lr-wpan
  * The device Capabilities.
  */
 enum DeviceType
@@ -93,32 +92,26 @@ public:
   void SetAssocPermit (bool assocPermit);
   /**
    * Get the Superframe Specification Beacon Order field.
-   * \return the Superframe Specification Beacon Order field.
    */
   uint8_t GetBeaconOrder (void) const;
   /**
    * Get the Superframe Specification Frame Order field.
-   * \return The Superframe Specification Frame Order field.
    */
   uint8_t GetFrameOrder (void) const;
   /**
-   * Get the the Final CAP Slot.
-   * \returns The Final CAP Slot
+   * Check if the Final CAP Slot bit is enabled.
    */
   uint8_t GetFinalCapSlot (void) const;
   /**
    * Check if the Battery Life Extension bit is enabled.
-   * \returns true if the Battery Life Extension bit is enabled
    */
   bool IsBattLifeExt (void) const;
   /**
    * Check if the PAN Coordinator bit is enabled.
-   * \returns true if the PAN Coordinator bit is enabled
    */
   bool IsPanCoor (void) const;
   /**
    * Check if the Association Permit bit is enabled.
-   * \returns true if the Association Permit bit is enabled
    */
   bool IsAssocPermit (void) const;
   /**
@@ -157,14 +150,6 @@ private:
   bool    m_sspecAssocPermit; //!< Superframe Specification field Association Permit (Bit 15)
 
 };
-
-/**
- * \brief Stream insertion operator.
- *
- * \param [in] os The reference to the output stream.
- * \param [in] superframeField The Superframe fields.
- * \returns The reference to the output stream.
- */
 std::ostream &operator << (std::ostream &os, const SuperframeField &superframeField);
 
 /**
@@ -189,12 +174,12 @@ public:
   uint8_t GetGtsDirectionField (void) const;
   /**
    * Set the GTS Specification Field to the GTS Fields
-   * \param gtsSpec The GTS Specification Field to set.
+   * gtsSpec The GTS Specification Field to set.
    */
   void SetGtsSpecField (uint8_t gtsSpec);
   /**
    * Set the GTS direction field to the GTS Fields
-   * \param gtsDir The GTS Direction Field to set
+   * gtsDir The GTS Direction Field to set
    */
   void SetGtsDirectionField (uint8_t gtsDir);
   /**
@@ -216,9 +201,7 @@ public:
   Buffer::Iterator Deserialize (Buffer::Iterator i);
 
 private:
-  /**
-   * GTS Descriptor
-   */
+  //GTS Descriptor
   struct gtsDescriptor
   {
     Mac16Address m_gtsDescDevShortAddr;      //!< GTS Descriptor Device Short Address (Bit 0-15)
@@ -228,23 +211,14 @@ private:
 
   //GTS specification field
   uint8_t m_gtsSpecDescCount;            //!< GTS specification field Descriptor Count (Bit 0-2)
-                                         // GTS specification field Reserved (Not necessary) (Bit 3-6)
+                                         //!< GTS specification field Reserved (Not necessary) (Bit 3-6)
   uint8_t m_gtsSpecPermit;               //!< GTS specification field GTS Permit (Bit 7)
   //GTS Direction field
   uint8_t m_gtsDirMask;                  //!< GTS Direction field Directions Mask (Bit 0-6)
-                                         // GTS Direction field Reserved (Not Necessary) (Bit 7)
+                                         //!< GTS Direction field Reserved (Not Necessary) (Bit 7)
   //GTS List
-  gtsDescriptor m_gtsList[7];            //!< GTS List field (maximum descriptors stored == 7)
+  gtsDescriptor m_gtsList[6];            //!< GTS List field (maximum descriptors stored == 7)
 };
-
-
-/**
- * \brief Stream insertion operator.
- *
- * \param [in] os The reference to the output stream.
- * \param [in] gtsFields The GTS fields.
- * \returns The reference to the output stream.
- */
 std::ostream &operator << (std::ostream &os, const GtsFields &gtsFields);
 
 
@@ -316,7 +290,7 @@ public:
   Buffer::Iterator Serialize (Buffer::Iterator i) const;
   /**
    * Deserialize the all the Pending Address Fields.
-   * \param i an iterator which points to where the Pending Address Fields should be read.
+   * \param start an iterator which points to where the Pending Address Fields should be read.
    * \return an iterator.
    */
   Buffer::Iterator Deserialize (Buffer::Iterator i);
@@ -332,14 +306,6 @@ private:
   std::array<Mac64Address,7>  m_extAddrList;      //!< Pending Extended Address List
 
 };
-
-/**
- * \brief Stream insertion operator.
- *
- * \param [in] os The reference to the output stream.
- * \param [in] pendingAddrFields The Pending Address fields.
- * \returns The reference to the output stream.
- */
 std::ostream &operator << (std::ostream &os, const PendingAddrFields &pendingAddrFields);
 
 

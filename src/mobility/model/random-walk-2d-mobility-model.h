@@ -66,7 +66,6 @@ private:
   /**
    * Walk according to position and velocity, until distance is reached,
    * time is reached, or intersection with the bounding box
-   * \param timeLeft The remaining time of the walk
    */
   void DoWalk (Time timeLeft);
   /**

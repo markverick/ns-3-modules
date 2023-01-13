@@ -161,9 +161,16 @@ class YansWifiPhyHelper : public WifiPhyHelper
 {
 public:
   /**
-   * Create a PHY helper.
+   * Create a PHY helper without any parameter set. The user must set
+   * them all to be able to call Install later.
    */
   YansWifiPhyHelper ();
+
+  /**
+   * Create a PHY helper in a default working state.
+   * \returns a default YansWifiPhyHelper
+   */
+  static YansWifiPhyHelper Default (void);
 
   /**
    * \param channel the channel to associate to this helper
@@ -186,7 +193,7 @@ private:
    *
    * This method implements the pure virtual method defined in \ref ns3::WifiPhyHelper.
    */
-  Ptr<WifiPhy> Create (Ptr<Node> node, Ptr<NetDevice> device) const override;
+  virtual Ptr<WifiPhy> Create (Ptr<Node> node, Ptr<NetDevice> device) const;
 
   Ptr<YansWifiChannel> m_channel; ///< YANS wifi channel
 };

@@ -37,16 +37,16 @@ public:
   EdcaParameterSet ();
 
   // Implementations of pure virtual methods of WifiInformationElement
-  WifiInformationElementId ElementId () const override;
-  uint8_t GetInformationFieldSize () const override;
-  void SerializeInformationField (Buffer::Iterator start) const override;
-  uint8_t DeserializeInformationField (Buffer::Iterator start, uint8_t length) override;
+  WifiInformationElementId ElementId () const;
+  uint8_t GetInformationFieldSize () const;
+  void SerializeInformationField (Buffer::Iterator start) const;
+  uint8_t DeserializeInformationField (Buffer::Iterator start, uint8_t length);
   /* This information element is a bit special in that it is only
      included if the STA is a QoS STA. To support this we
      override the Serialize and GetSerializedSize methods of
      WifiInformationElement. */
-  Buffer::Iterator Serialize (Buffer::Iterator start) const override;
-  uint16_t GetSerializedSize () const override;
+  Buffer::Iterator Serialize (Buffer::Iterator start) const;
+  uint16_t GetSerializedSize () const;
 
   /**
    * Set QOS supported function

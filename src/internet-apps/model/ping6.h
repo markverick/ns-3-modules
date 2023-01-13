@@ -23,7 +23,6 @@
 
 #include "ns3/application.h"
 #include "ns3/ipv6-address.h"
-#include "ns3/ipv6-l3-protocol.h"
 
 namespace ns3
 {
@@ -140,7 +139,7 @@ private:
   uint32_t m_size;
 
   /**
-   * \brief Interval between packets sent.
+   * \brief Intervall between packets sent.
    */
   Time m_interval;
 
@@ -148,16 +147,6 @@ private:
    * \brief Local address.
    */
   Ipv6Address m_localAddress;
-
-  /**
-   * \brief IP interface index relative to the local address.
-   */
-  uint32_t m_ipInterfaceIndex;
-
-  /**
-   * \brief IP interface index relative to the local address.
-   */
-  Ptr<Ipv6L3Protocol> m_ipv6Protocol;
 
   /**
    * \brief Peer address.

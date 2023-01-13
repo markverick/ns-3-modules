@@ -134,7 +134,7 @@ HwmpDoRfRegressionTest::CreateDevices ()
 {
   int64_t streamsUsed = 0;
   // 1. setup WiFi
-  YansWifiPhyHelper wifiPhy;
+  YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
   // This test suite output was originally based on YansErrorRateModel
   wifiPhy.SetErrorRateModel ("ns3::YansErrorRateModel");
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();

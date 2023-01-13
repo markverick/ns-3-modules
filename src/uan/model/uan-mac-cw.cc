@@ -35,11 +35,10 @@ NS_OBJECT_ENSURE_REGISTERED (UanMacCw);
 
 UanMacCw::UanMacCw ()
   : UanMac (),
-  m_phy (0),
-  m_pktTx (0),
-  m_txOngoing (false),
-  m_state (IDLE),
-  m_cleared (false)
+    m_phy (0),
+    m_pktTx (0),
+    m_state (IDLE),
+    m_cleared (false)
 
 {
   m_rv = CreateObject<UniformRandomVariable> ();
@@ -64,7 +63,7 @@ UanMacCw::Clear ()
       m_phy = 0;
     }
   m_sendEvent.Cancel ();
-  m_txOngoing = false;
+  m_txEndEvent.Cancel ();
 }
 
 void
@@ -116,7 +115,7 @@ UanMacCw::Enqueue (Ptr<Packet> packet, uint16_t protocolNumber, const Address &d
     {
     case CCABUSY:
       NS_LOG_DEBUG ("Time " << Now ().As (Time::S) << " MAC " << GetAddress () << " Starting enqueue CCABUSY");
-      if (m_txOngoing == true)
+      if (m_txEndEvent.IsRunning ())
         {
           NS_LOG_DEBUG ("State is TX");
         }
@@ -255,24 +254,22 @@ UanMacCw::NotifyCcaEnd (void)
 void
 UanMacCw::NotifyTxStart (Time duration)
 {
-  m_txOngoing = true;
 
-  NS_LOG_DEBUG ("Time " << Now ().As (Time::S) << " Tx Start Notified");
+  if (m_txEndEvent.IsRunning ())
+    {
+      Simulator::Cancel (m_txEndEvent);
+    }
 
+  m_txEndEvent = Simulator::Schedule (duration, &UanMacCw::EndTx, this);
+  NS_LOG_DEBUG ("Time " << Now ().As (Time::S) << " scheduling TxEndEvent with delay " << duration.As (Time::S));
   if (m_state == RUNNING)
     {
       NS_ASSERT (0);
       m_state = CCABUSY;
       SaveTimer ();
+
     }
-}
 
-void
-UanMacCw::NotifyTxEnd (void)
-{
-  m_txOngoing = false;
-
-  EndTx ();
 }
 
 int64_t

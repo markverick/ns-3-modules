@@ -128,16 +128,7 @@ public:
   typedef void (* PacketModeTracedCallback)
     (Ptr<const Packet> packet, UanTxMode mode);
 
-  /**
-   * Get the Tx mode index (Modulation type).
-   * \return the Tx mode index
-   */
   uint32_t GetTxModeIndex ();
-
-  /**
-   * Set the Tx mode index (Modulation type).
-   * \param txModeIndex the Tx mode index
-   */
   void SetTxModeIndex (uint32_t txModeIndex);
 
 private:

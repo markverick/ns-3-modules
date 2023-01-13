@@ -485,12 +485,6 @@ Object::GetObject () const
   return 0;
 }
 
-/**
- * Specialization of \link Object::GetObject () \endlink for
- * objects of type ns3::Object.
- *
- * \returns A Ptr to the calling object.
- */
 template
 <>
 inline Ptr<Object>
@@ -511,13 +505,6 @@ Object::GetObject (TypeId tid) const
   return 0;
 }
 
-/**
- * Specialization of \link Object::GetObject (TypeId tid) \endlink for
- * objects of type ns3::Object.
- *
- * \param [in] tid The TypeId of the requested Object.
- * \returns A Ptr to the calling object.
- */
 template
 <>
 inline Ptr<Object>

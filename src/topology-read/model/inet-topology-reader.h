@@ -52,6 +52,12 @@ namespace ns3 {
 class InetTopologyReader : public TopologyReader
 {
 public:
+  /**
+   * \brief Get the type ID.
+   * \return the object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
   InetTopologyReader ();
   virtual ~InetTopologyReader ();
 

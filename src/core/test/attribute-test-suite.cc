@@ -228,12 +228,6 @@ public:
                      TimeValue (Seconds (-2)),
                      MakeTimeAccessor (&AttributeObjectTest::m_timeWithBounds),
                      MakeTimeChecker (Seconds (-5), Seconds (10)))
-      .AddAttribute ("TestDeprecated", "help text",
-                     BooleanValue (false),
-                     MakeBooleanAccessor (&AttributeObjectTest::m_boolTestDeprecated),
-                     MakeBooleanChecker (),
-                     TypeId::DEPRECATED,
-                     "DEPRECATED test working.")
     ;
 
     return tid;
@@ -326,7 +320,6 @@ private:
 
   bool m_boolTestA;
   bool m_boolTest;
-  bool m_boolTestDeprecated;
   int16_t m_int16;
   int16_t m_int16WithBounds;
   int16_t m_int16SetGet;
@@ -430,20 +423,6 @@ AttributeTestCase<BooleanValue>::DoRun (void)
 
   ok = CheckGetCodePaths (p, "TestBoolName", "true", BooleanValue (true));
   NS_TEST_ASSERT_MSG_EQ (ok, true, "Attribute not set properly by default value");
-
-  std::string expected ("Attribute 'TestDeprecated' is deprecated: DEPRECATED test working.\n");
-  // Temporarily redirect std::cerr to a stringstream
-  std::stringstream buffer;
-  std::streambuf *oldBuffer = std::cerr.rdbuf (buffer.rdbuf());
-  // Cause the deprecation warning to be sent to the stringstream
-  Config::SetDefault ("ns3::AttributeObjectTest::TestDeprecated", BooleanValue (true));
-
-  // Compare the obtained actual string with the expected string.
-  NS_TEST_ASSERT_MSG_EQ (buffer.str (), expected, "Deprecated attribute not working");
-  // Restore cerr to its original stream buffer
-  std::cerr.rdbuf (oldBuffer);
-
-
 
   //
   // Set the default value of the BooleanValue the other way and create an object.
@@ -799,13 +778,13 @@ AttributeTestCase<TimeValue>::DoRun (void)
   ok = p->SetAttributeFailSafe ("TestTimeWithBounds", TimeValue (Seconds (5)));
   NS_TEST_ASSERT_MSG_EQ (ok, true, "Could not SetAttributeFailSafe() via TimeValue to 5s");
 
-  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "+5e+09ns", TimeValue (Seconds (5)));
+  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "+5000000000.0ns", TimeValue (Seconds (5)));
   NS_TEST_ASSERT_MSG_EQ (ok, true, "Attribute not set properly by SetAttributeFailSafe(5s) via TimeValue");
 
   ok = p->SetAttributeFailSafe ("TestTimeWithBounds", StringValue ("3s"));
   NS_TEST_ASSERT_MSG_EQ (ok, true, "Could not SetAttributeFailSafe() via TimeValue to 3s");
 
-  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "+3e+09ns", TimeValue (Seconds (3)));
+  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "+3000000000.0ns", TimeValue (Seconds (3)));
   NS_TEST_ASSERT_MSG_EQ (ok, true, "Attribute not set properly by SetAttributeFailSafe(3s) via StringValue");
 
 
@@ -820,7 +799,7 @@ AttributeTestCase<TimeValue>::DoRun (void)
   ok = p->SetAttributeFailSafe ("TestTimeWithBounds", TimeValue (Seconds (10)));
   NS_TEST_ASSERT_MSG_EQ (ok, true, "Could not SetAttributeFailSafe() via TimeValue to 10s");
 
-  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "+1e+10ns", TimeValue (Seconds (10)));
+  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "+10000000000.0ns", TimeValue (Seconds (10)));
   NS_TEST_ASSERT_MSG_EQ (ok, true, "Attribute not set properly by SetAttributeFailSafe(10s [positive limit]) via StringValue");
 
   //
@@ -829,7 +808,7 @@ AttributeTestCase<TimeValue>::DoRun (void)
   ok = p->SetAttributeFailSafe ("TestTimeWithBounds", TimeValue (Seconds (11)));
   NS_TEST_ASSERT_MSG_EQ (ok, false, "Unexpectedly could SetAttributeFailSafe() via TimeValue to 11s [greater than positive limit]");
 
-  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "+1e+10ns", TimeValue (Seconds (10)));
+  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "+10000000000.0ns", TimeValue (Seconds (10)));
   NS_TEST_ASSERT_MSG_EQ (ok, true, "Error in SetAttributeFailSafe() but value changes");
 
   //
@@ -838,7 +817,7 @@ AttributeTestCase<TimeValue>::DoRun (void)
   ok = p->SetAttributeFailSafe ("TestTimeWithBounds", TimeValue (Seconds (-5)));
   NS_TEST_ASSERT_MSG_EQ (ok, true, "Could not SetAttributeFailSafe() via TimeValue to -5s");
 
-  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "-5e+09ns", TimeValue (Seconds (-5)));
+  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "-5000000000.0ns", TimeValue (Seconds (-5)));
   NS_TEST_ASSERT_MSG_EQ (ok, true, "Attribute not set properly by SetAttributeFailSafe(-5s [negative limit]) via StringValue");
 
   //
@@ -847,7 +826,7 @@ AttributeTestCase<TimeValue>::DoRun (void)
   ok = p->SetAttributeFailSafe ("TestTimeWithBounds", TimeValue (Seconds (-6)));
   NS_TEST_ASSERT_MSG_EQ (ok, false, "Unexpectedly could SetAttributeFailSafe() via TimeValue to -6s");
 
-  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "-5e+09ns", TimeValue (Seconds (-5)));
+  ok = CheckGetCodePaths (p, "TestTimeWithBounds", "-5000000000.0ns", TimeValue (Seconds (-5)));
   NS_TEST_ASSERT_MSG_EQ (ok, true, "Error in SetAttributeFailSafe() but value changes");
 }
 

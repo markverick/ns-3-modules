@@ -587,47 +587,23 @@ protected:
    * \brief Forcefully set the initial cwnd
    *
    * \param who socket to force
-   * \param initialCwnd size of the initial cwnd (segments)
+   * \param initialCwnd size of the initial cwnd
    */
   void SetInitialCwnd (SocketWho who, uint32_t initialCwnd);
 
   /**
-   * \brief Forcefully set the delayed acknowledgement count
+   * \brief Forcefully set the ecn use on
    *
    * \param who socket to force
-   * \param count value of delayed ACKs
-   */
-  void SetDelAckMaxCount (SocketWho who, uint32_t count);
-
-  /**
-   * \brief Forcefully set the ECN mode of use
-   *
-   * \param who socket to force
-   * \param useEcn Value representing the mode of ECN usage requested
+   * \param useEcn Mode of ECN. Currently Off and On are supported.
    */
   void SetUseEcn (SocketWho who, TcpSocketState::UseEcn_t useEcn);
 
   /**
-   * \brief Enable or disable pacing in the TCP socket
-   * 
-   * \param who socket
-   * \param pacing Boolean to enable or disable pacing
-   */
-  void SetPacingStatus (SocketWho who, bool pacing);
-
-  /**
-   * \brief Enable or disable pacing of the initial window
-   * 
-   * \param who socket
-   * \param paceWindow Boolean to enable or disable pacing of initial window
-   */
-  void SetPaceInitialWindow (SocketWho who, bool paceWindow);
-
-  /**
-   * \brief Forcefully set the initial ssthresh
+   * \brief Forcefully set the initial ssth
    *
    * \param who socket to force
-   * \param initialSsThresh Initial slow start threshold (bytes)
+   * \param initialSsThresh size of the initial ssth
    */
   void SetInitialSsThresh (SocketWho who, uint32_t initialSsThresh);
 
@@ -682,7 +658,7 @@ protected:
    *
    * \param recovery typeid of the recovery algorithm
    */
-  void SetRecoveryAlgorithm (TypeId recovery) { m_recoveryTypeId = recovery; }
+  void SetRecoveryAlgorithm (TypeId reccovery) { m_recoveryTypeId = reccovery; }
 
   /**
    * \brief MTU of the bottleneck link

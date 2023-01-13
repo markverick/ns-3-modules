@@ -106,7 +106,7 @@ SpectrumAnalyzer::GetDevice () const
 
 
 Ptr<MobilityModel>
-SpectrumAnalyzer::GetMobility () const
+SpectrumAnalyzer::GetMobility ()
 {
   return m_mobility;
 }
@@ -143,7 +143,7 @@ SpectrumAnalyzer::SetChannel (Ptr<SpectrumChannel> c)
 
 
 Ptr<AntennaModel>
-SpectrumAnalyzer::GetRxAntenna () const
+SpectrumAnalyzer::GetRxAntenna ()
 {
   return m_antenna;
 }

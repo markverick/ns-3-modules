@@ -1,6 +1,5 @@
 
-command-line-example:
-
+command-line-example
 Initial values:
 intArg:   1
 boolArg:  false

@@ -52,17 +52,17 @@ public:
   ExtendedSupportedRatesIE (SupportedRates *rates);
 
   // Implementations of pure virtual methods of WifiInformationElement
-  WifiInformationElementId ElementId () const override;
-  uint8_t GetInformationFieldSize () const override;
-  void SerializeInformationField (Buffer::Iterator start) const override;
+  WifiInformationElementId ElementId () const;
+  uint8_t GetInformationFieldSize () const;
+  void SerializeInformationField (Buffer::Iterator start) const;
   uint8_t DeserializeInformationField (Buffer::Iterator start,
-                                       uint8_t length) override;
+                                       uint8_t length);
   /* This information element is a bit special in that it is only
     included if there are more than 8 rates. To support this we
     override the Serialize and GetSerializedSize methods of
     WifiInformationElement. */
-  Buffer::Iterator Serialize (Buffer::Iterator start) const override;
-  uint16_t GetSerializedSize () const override;
+  Buffer::Iterator Serialize (Buffer::Iterator start) const;
+  uint16_t GetSerializedSize () const;
 
   /**
    * Set supported rates.
@@ -97,12 +97,8 @@ class SupportedRates : public WifiInformationElement
 public:
   SupportedRates ();
 
-  /**
-   * Type conversion operator
-   *
-   * \param rates the reference const SupportedRates
-   */
-  SupportedRates (const SupportedRates & rates);
+  /// type conversion operator
+  SupportedRates (const SupportedRates &);
 
   // Implementations of pure virtual methods of WifiInformationElement
   WifiInformationElementId ElementId () const;
@@ -112,7 +108,7 @@ public:
                                        uint8_t length);
 
   /**
-   * Assignment operator
+   * assignment operator
    *
    * \param rates the rates to assign
    * \returns the assigned value

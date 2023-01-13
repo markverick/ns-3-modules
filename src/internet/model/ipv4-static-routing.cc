@@ -67,17 +67,12 @@ Ipv4StaticRouting::AddNetworkRouteTo (Ipv4Address network,
                                       uint32_t metric)
 {
   NS_LOG_FUNCTION (this << network << " " << networkMask << " " << nextHop << " " << interface << " " << metric);
-
-  Ipv4RoutingTableEntry route = Ipv4RoutingTableEntry::CreateNetworkRouteTo (network,
-                                                                             networkMask,
-                                                                             nextHop,
-                                                                             interface);
-
-  if (!LookupRoute (route, metric))
-    {
-      Ipv4RoutingTableEntry *routePtr = new Ipv4RoutingTableEntry (route);
-      m_networkRoutes.push_back (make_pair (routePtr, metric));
-    }
+  Ipv4RoutingTableEntry *route = new Ipv4RoutingTableEntry ();
+  *route = Ipv4RoutingTableEntry::CreateNetworkRouteTo (network,
+                                                        networkMask,
+                                                        nextHop,
+                                                        interface);
+  m_networkRoutes.push_back (make_pair (route,metric));
 }
 
 void 
@@ -87,16 +82,11 @@ Ipv4StaticRouting::AddNetworkRouteTo (Ipv4Address network,
                                       uint32_t metric)
 {
   NS_LOG_FUNCTION (this << network << " " << networkMask << " " << interface << " " << metric);
-
-  Ipv4RoutingTableEntry route = Ipv4RoutingTableEntry::CreateNetworkRouteTo (network,
-                                                                             networkMask,
-                                                                             interface);
-  if (!LookupRoute (route, metric))
-    {
-      Ipv4RoutingTableEntry *routePtr = new Ipv4RoutingTableEntry (route);
-
-      m_networkRoutes.push_back (make_pair (routePtr, metric));
-    }
+  Ipv4RoutingTableEntry *route = new Ipv4RoutingTableEntry ();
+  *route = Ipv4RoutingTableEntry::CreateNetworkRouteTo (network,
+                                                        networkMask,
+                                                        interface);
+  m_networkRoutes.push_back (make_pair (route,metric));
 }
 
 void 
@@ -227,25 +217,6 @@ Ipv4StaticRouting::RemoveMulticastRoute (uint32_t index)
         }
       tmp++;
     }
-}
-
-bool
-Ipv4StaticRouting::LookupRoute (const Ipv4RoutingTableEntry &route, uint32_t metric)
-{
-  for (NetworkRoutesI j = m_networkRoutes.begin (); j != m_networkRoutes.end (); j++)
-    {
-      Ipv4RoutingTableEntry* rtentry = j->first;
-
-      if (rtentry->GetDest () == route.GetDest () &&
-          rtentry->GetDestNetworkMask () == route.GetDestNetworkMask () &&
-          rtentry->GetGateway () == route.GetGateway () &&
-          rtentry->GetInterface () == route.GetInterface () &&
-          j->second == metric)
-        {
-          return true;
-        }
-    }
-  return false;
 }
 
 Ptr<Ipv4Route>
@@ -723,11 +694,6 @@ Ipv4StaticRouting::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Uni
 {
   NS_LOG_FUNCTION (this << stream);
   std::ostream* os = stream->GetStream ();
-  // Copy the current ostream state
-  std::ios oldState (nullptr);
-  oldState.copyfmt (*os);
-
-  *os << std::resetiosflags (std::ios::adjustfield) << std::setiosflags (std::ios::left);
 
   *os << "Node: " << m_ipv4->GetObject<Node> ()->GetId ()
       << ", Time: " << Now().As (unit)
@@ -742,11 +708,11 @@ Ipv4StaticRouting::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Uni
           std::ostringstream dest, gw, mask, flags;
           Ipv4RoutingTableEntry route = GetRoute (j);
           dest << route.GetDest ();
-          *os << std::setw (16) << dest.str ();
+          *os << std::setiosflags (std::ios::left) << std::setw (16) << dest.str ();
           gw << route.GetGateway ();
-          *os << std::setw (16) << gw.str ();
+          *os << std::setiosflags (std::ios::left) << std::setw (16) << gw.str ();
           mask << route.GetDestNetworkMask ();
-          *os << std::setw (16) << mask.str ();
+          *os << std::setiosflags (std::ios::left) << std::setw (16) << mask.str ();
           flags << "U";
           if (route.IsHost ())
             {
@@ -756,8 +722,8 @@ Ipv4StaticRouting::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Uni
             {
               flags << "GS";
             }
-          *os << std::setw (6) << flags.str ();
-          *os << std::setw (7) << GetMetric (j);
+          *os << std::setiosflags (std::ios::left) << std::setw (6) << flags.str ();
+          *os << std::setiosflags (std::ios::left) << std::setw (7) << GetMetric (j);
           // Ref ct not implemented
           *os << "-" << "      ";
           // Use not implemented
@@ -774,8 +740,6 @@ Ipv4StaticRouting::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Uni
         }
     }
   *os << std::endl;
-  // Restore the previous ostream state
-  (*os).copyfmt (oldState);
 }
 
 } // namespace ns3

@@ -38,8 +38,8 @@ Ipv6Header::Ipv6Header ()
     m_nextHeader (0),
     m_hopLimit (0)
 {
-  SetSource (Ipv6Address ("::"));
-  SetDestination (Ipv6Address ("::"));
+  SetSourceAddress (Ipv6Address ("::"));
+  SetDestinationAddress (Ipv6Address ("::"));
 }
 
 void Ipv6Header::SetTrafficClass (uint8_t traffic)
@@ -92,44 +92,24 @@ uint8_t Ipv6Header::GetHopLimit () const
   return m_hopLimit;
 }
 
-void Ipv6Header::SetSource (Ipv6Address src)
+void Ipv6Header::SetSourceAddress (Ipv6Address src)
 {
   m_sourceAddress = src;
 }
 
-void Ipv6Header::SetSourceAddress (Ipv6Address src)
-{
-  SetSource (src);
-}
-
-Ipv6Address Ipv6Header::GetSource () const
+Ipv6Address Ipv6Header::GetSourceAddress () const
 {
   return m_sourceAddress;
 }
 
-Ipv6Address Ipv6Header::GetSourceAddress () const
-{
-  return GetSource ();
-}
-
-void Ipv6Header::SetDestination (Ipv6Address dst)
+void Ipv6Header::SetDestinationAddress (Ipv6Address dst)
 {
   m_destinationAddress = dst;
 }
 
-void Ipv6Header::SetDestinationAddress (Ipv6Address dst)
-{
-  SetDestination (dst);
-}
-
-Ipv6Address Ipv6Header::GetDestination () const
-{
-  return m_destinationAddress;
-}
-
 Ipv6Address Ipv6Header::GetDestinationAddress () const
 {
-  return GetDestination ();
+  return m_destinationAddress;
 }
 
 TypeId Ipv6Header::GetTypeId (void)

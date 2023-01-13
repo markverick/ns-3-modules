@@ -127,7 +127,14 @@ YansWifiPhyHelper::YansWifiPhyHelper ()
   : m_channel (0)
 {
   m_phy.SetTypeId ("ns3::YansWifiPhy");
-  SetErrorRateModel ("ns3::TableBasedErrorRateModel");
+}
+
+YansWifiPhyHelper
+YansWifiPhyHelper::Default (void)
+{
+  YansWifiPhyHelper helper;
+  helper.SetErrorRateModel ("ns3::NistErrorRateModel");
+  return helper;
 }
 
 void
@@ -151,13 +158,13 @@ YansWifiPhyHelper::Create (Ptr<Node> node, Ptr<NetDevice> device) const
   phy->SetErrorRateModel (error);
   if (m_frameCaptureModel.IsTypeIdSet ())
     {
-      auto frameCapture = m_frameCaptureModel.Create<FrameCaptureModel> ();
-      phy->SetFrameCaptureModel (frameCapture);
+      Ptr<FrameCaptureModel> capture = m_frameCaptureModel.Create<FrameCaptureModel> ();
+      phy->SetFrameCaptureModel (capture);
     }
   if (m_preambleDetectionModel.IsTypeIdSet ())
     {
-      auto preambleDetection = m_preambleDetectionModel.Create<PreambleDetectionModel> ();
-      phy->SetPreambleDetectionModel (preambleDetection);
+      Ptr<PreambleDetectionModel> capture = m_preambleDetectionModel.Create<PreambleDetectionModel> ();
+      phy->SetPreambleDetectionModel (capture);
     }
   phy->SetChannel (m_channel);
   phy->SetDevice (device);

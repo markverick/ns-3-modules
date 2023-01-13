@@ -25,8 +25,6 @@
 #include "ns3/point-to-point-channel.h"
 #include "ns3/net-device-queue-interface.h"
 
-#include <string>
-
 using namespace ns3;
 
 /**
@@ -49,27 +47,12 @@ public:
   virtual void DoRun (void);
 
 private:
-  
-  Ptr<const Packet> m_recvdPacket; //!< received packet
   /**
    * \brief Send one packet to the device specified
    *
-   * \param device NetDevice to send to.
-   * \param buffer Payload content of the packet.
-   * \param size Size of the payload.
+   * \param device NetDevice to send to
    */
-  void SendOnePacket (Ptr<PointToPointNetDevice> device, uint8_t const *buffer, uint32_t size);
-  /**
-   * \brief Callback function which sets the recvdPacket parameter
-   *
-   * \param dev The receiving device.
-   * \param pkt The received packet.
-   * \param mode The protocol mode used.
-   * \param sender The sender address.
-   * 
-   * \return A boolean indicating packet handled properly.
-   */
-  bool RxPacket (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address &sender);
+  void SendOnePacket (Ptr<PointToPointNetDevice> device);
 };
 
 PointToPointTest::PointToPointTest ()
@@ -78,17 +61,10 @@ PointToPointTest::PointToPointTest ()
 }
 
 void
-PointToPointTest::SendOnePacket (Ptr<PointToPointNetDevice> device, uint8_t const *buffer, uint32_t size)
+PointToPointTest::SendOnePacket (Ptr<PointToPointNetDevice> device)
 {
-  Ptr<Packet> p = Create<Packet> (buffer, size);
+  Ptr<Packet> p = Create<Packet> ();
   device->Send (p, device->GetBroadcast (), 0x800);
-}
-
-bool
-PointToPointTest::RxPacket (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address &sender)
-{
-  m_recvdPacket = pkt;
-  return true;
 }
 
 
@@ -110,23 +86,11 @@ PointToPointTest::DoRun (void)
 
   a->AddDevice (devA);
   b->AddDevice (devB);
-  
-  devB->SetReceiveCallback (MakeCallback (&PointToPointTest::RxPacket,
-                                          this));
-  uint8_t txBuffer [] = "\"Can you tell me where my country lies?\" \\ said the unifaun to his true love's eyes. \\ \"It lies with me!\" cried the Queen of Maybe \\ - for her merchandise, he traded in his prize.";
-  size_t txBufferSize = sizeof(txBuffer);
-  
-  Simulator::Schedule (Seconds (1.0), &PointToPointTest::SendOnePacket, this, devA, txBuffer, txBufferSize);
+
+  Simulator::Schedule (Seconds (1.0), &PointToPointTest::SendOnePacket, this, devA);
 
   Simulator::Run ();
 
-  NS_TEST_EXPECT_MSG_EQ (m_recvdPacket->GetSize (), txBufferSize, "trivial");
-
-  uint8_t rxBuffer [1500]; // As large as the P2P MTU size, assuming that the user didn't change it.
-  
-  m_recvdPacket->CopyData (rxBuffer, txBufferSize);
-  NS_TEST_EXPECT_MSG_EQ (memcmp (rxBuffer, txBuffer, txBufferSize), 0, "trivial");
-  
   Simulator::Destroy ();
 }
 

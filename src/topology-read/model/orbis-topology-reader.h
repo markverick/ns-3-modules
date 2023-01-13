@@ -49,6 +49,12 @@ namespace ns3 {
 class OrbisTopologyReader : public TopologyReader
 {
 public:
+  /**
+   * \brief Get the type ID.
+   * \return the object TypeId.
+   */
+  static TypeId GetTypeId (void);
+
   OrbisTopologyReader ();
   virtual ~OrbisTopologyReader ();
 

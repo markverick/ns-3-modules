@@ -32,7 +32,6 @@
   if (GetObject<Node> ()) { std::clog << "[node " << GetObject<Node> ()->GetId () << "] "; }
 
 
-#include <iomanip>
 #include "olsr-routing-protocol.h"
 #include "ns3/socket-factory.h"
 #include "ns3/udp-socket-factory.h"
@@ -129,6 +128,7 @@
 #define JITTER (Seconds (m_uniformRandomVariable->GetValue (0, OLSR_MAXJITTER)))
 
 
+#define OLSR_PORT_NUMBER 698
 /// Maximum number of messages per packet.
 #define OLSR_MAX_MSGS           64
 
@@ -148,9 +148,6 @@ namespace olsr {
 /********** OLSR class **********/
 
 NS_OBJECT_ENSURE_REGISTERED (RoutingProtocol);
-
-/* see https://www.iana.org/assignments/service-names-port-numbers */
-const uint16_t RoutingProtocol::OLSR_PORT_NUMBER = 698;
 
 TypeId
 RoutingProtocol::GetTypeId (void)
@@ -197,7 +194,7 @@ RoutingProtocol::GetTypeId (void)
 }
 
 
-RoutingProtocol::RoutingProtocol (void)
+RoutingProtocol::RoutingProtocol ()
   : m_routingTableAssociation (0),
   m_ipv4 (0),
   m_helloTimer (Timer::CANCEL_ON_DESTROY),
@@ -211,7 +208,7 @@ RoutingProtocol::RoutingProtocol (void)
   m_hnaRoutingTable = Create<Ipv4StaticRouting> ();
 }
 
-RoutingProtocol::~RoutingProtocol (void)
+RoutingProtocol::~RoutingProtocol ()
 {
 }
 
@@ -238,13 +235,7 @@ RoutingProtocol::SetIpv4 (Ptr<Ipv4> ipv4)
   m_hnaRoutingTable->SetIpv4 (ipv4);
 }
 
-Ptr<Ipv4>
-RoutingProtocol::GetIpv4 (void) const
-{
-  return m_ipv4;
-}
-
-void RoutingProtocol::DoDispose (void)
+void RoutingProtocol::DoDispose ()
 {
   m_ipv4 = 0;
   m_hnaRoutingTable = 0;
@@ -271,52 +262,41 @@ void
 RoutingProtocol::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Unit unit) const
 {
   std::ostream* os = stream->GetStream ();
-  // Copy the current ostream state
-  std::ios oldState (nullptr);
-  oldState.copyfmt (*os);
-
-  *os << std::resetiosflags (std::ios::adjustfield) << std::setiosflags (std::ios::left);
 
   *os << "Node: " << m_ipv4->GetObject<Node> ()->GetId ()
       << ", Time: " << Now ().As (unit)
-      << ", Local time: " << m_ipv4->GetObject<Node> ()->GetLocalTime ().As (unit)
+      << ", Local time: " << GetObject<Node> ()->GetLocalTime ().As (unit)
       << ", OLSR Routing table" << std::endl;
 
-  *os << std::setw (16) << "Destination";
-  *os << std::setw (16) << "NextHop";
-  *os << std::setw (16) << "Interface";
-  *os << "Distance" << std::endl;
+  *os << "Destination\t\tNextHop\t\tInterface\tDistance\n";
 
   for (std::map<Ipv4Address, RoutingTableEntry>::const_iterator iter = m_table.begin ();
        iter != m_table.end (); iter++)
     {
-      *os << std::setw (16) << iter->first;
-      *os << std::setw (16) << iter->second.nextAddr;
-      *os << std::setw (16);
+      *os << iter->first << "\t\t";
+      *os << iter->second.nextAddr << "\t\t";
       if (Names::FindName (m_ipv4->GetNetDevice (iter->second.interface)) != "")
         {
-          *os << Names::FindName (m_ipv4->GetNetDevice (iter->second.interface));
+          *os << Names::FindName (m_ipv4->GetNetDevice (iter->second.interface)) << "\t\t";
         }
       else
         {
-          *os << iter->second.interface;
+          *os << iter->second.interface << "\t\t";
         }
-      *os << iter->second.distance << std::endl;
+      *os << iter->second.distance << "\t";
+      *os << "\n";
     }
-  *os << std::endl;
 
   // Also print the HNA routing table
   if (m_hnaRoutingTable->GetNRoutes () > 0)
     {
-      *os << "HNA Routing Table:" << std::endl;
+      *os << " HNA Routing Table: ";
       m_hnaRoutingTable->PrintRoutingTable (stream, unit);
     }
   else
     {
-      *os << "HNA Routing Table: empty" << std::endl;
+      *os << " HNA Routing Table: empty" << std::endl;
     }
-  // Restore the previous ostream state
-  (*os).copyfmt (oldState);
 }
 
 void RoutingProtocol::DoInitialize ()
@@ -388,7 +368,6 @@ void RoutingProtocol::DoInitialize ()
       Ptr<Socket> socket = Socket::CreateSocket (GetObject<Node> (),
                                                  UdpSocketFactory::GetTypeId ());
       socket->SetAllowBroadcast (true);
-      socket->SetIpTtl (1);
       InetSocketAddress inetAddr (m_ipv4->GetAddress (i, 0).GetLocal (), OLSR_PORT_NUMBER);
       socket->SetRecvCallback (MakeCallback (&RoutingProtocol::RecvOlsr,  this));
       socket->BindToNetDevice (m_ipv4->GetNetDevice (i));
@@ -533,28 +512,28 @@ RoutingProtocol::RecvOlsr (Ptr<Socket> socket)
           switch (messageHeader.GetMessageType ())
             {
             case olsr::MessageHeader::HELLO_MESSAGE:
-              NS_LOG_DEBUG (Simulator::Now ().As (Time::S)
-                            << " OLSR node " << m_mainAddress
+              NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+                            << "s OLSR node " << m_mainAddress
                             << " received HELLO message of size " << messageHeader.GetSerializedSize ());
               ProcessHello (messageHeader, receiverIfaceAddr, senderIfaceAddr);
               break;
 
             case olsr::MessageHeader::TC_MESSAGE:
-              NS_LOG_DEBUG (Simulator::Now ().As (Time::S)
-                            << " OLSR node " << m_mainAddress
+              NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+                            << "s OLSR node " << m_mainAddress
                             << " received TC message of size " << messageHeader.GetSerializedSize ());
               ProcessTc (messageHeader, senderIfaceAddr);
               break;
 
             case olsr::MessageHeader::MID_MESSAGE:
-              NS_LOG_DEBUG (Simulator::Now ().As (Time::S)
-                            << " OLSR node " << m_mainAddress
+              NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+                            << "s OLSR node " << m_mainAddress
                             <<  " received MID message of size " << messageHeader.GetSerializedSize ());
               ProcessMid (messageHeader, senderIfaceAddr);
               break;
             case olsr::MessageHeader::HNA_MESSAGE:
-              NS_LOG_DEBUG (Simulator::Now ().As (Time::S)
-                            << " OLSR node " << m_mainAddress
+              NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+                            << "s OLSR node " << m_mainAddress
                             <<  " received HNA message of size " << messageHeader.GetSerializedSize ());
               ProcessHna (messageHeader, senderIfaceAddr);
               break;
@@ -662,7 +641,7 @@ CoverTwoHopNeighbors (Ipv4Address neighborMainAddr, TwoHopNeighborSet & N2)
 }  // unnamed namespace
 
 void
-RoutingProtocol::MprComputation  (void)
+RoutingProtocol::MprComputation ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -973,10 +952,10 @@ RoutingProtocol::GetMainAddress (Ipv4Address iface_addr) const
 }
 
 void
-RoutingProtocol::RoutingTableComputation  (void)
+RoutingProtocol::RoutingTableComputation ()
 {
-  NS_LOG_DEBUG (Simulator::Now ().As (Time::S) << " : Node " << m_mainAddress
-                                               << ": RoutingTableComputation begin...");
+  NS_LOG_DEBUG (Simulator::Now ().GetSeconds () << " s: Node " << m_mainAddress
+                                                << ": RoutingTableComputation begin...");
 
   // 1. All the entries from the routing table are removed.
   Clear ();
@@ -1303,8 +1282,8 @@ RoutingProtocol::ProcessHello (const olsr::MessageHeader &msg,
 #ifdef NS3_LOG_ENABLE
   {
     const LinkSet &links = m_state.GetLinks ();
-    NS_LOG_DEBUG (Simulator::Now ().As (Time::S)
-                  << " ** BEGIN dump Link Set for OLSR Node " << m_mainAddress);
+    NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+                  << "s ** BEGIN dump Link Set for OLSR Node " << m_mainAddress);
     for (LinkSet::const_iterator link = links.begin (); link != links.end (); link++)
       {
         NS_LOG_DEBUG (*link);
@@ -1312,8 +1291,8 @@ RoutingProtocol::ProcessHello (const olsr::MessageHeader &msg,
     NS_LOG_DEBUG ("** END dump Link Set for OLSR Node " << m_mainAddress);
 
     const NeighborSet &neighbors = m_state.GetNeighbors ();
-    NS_LOG_DEBUG (Simulator::Now ().As (Time::S)
-                  << " ** BEGIN dump Neighbor Set for OLSR Node " << m_mainAddress);
+    NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+                  << "s ** BEGIN dump Neighbor Set for OLSR Node " << m_mainAddress);
     for (NeighborSet::const_iterator neighbor = neighbors.begin (); neighbor != neighbors.end (); neighbor++)
       {
         NS_LOG_DEBUG (*neighbor);
@@ -1328,8 +1307,8 @@ RoutingProtocol::ProcessHello (const olsr::MessageHeader &msg,
 #ifdef NS3_LOG_ENABLE
   {
     const TwoHopNeighborSet &twoHopNeighbors = m_state.GetTwoHopNeighbors ();
-    NS_LOG_DEBUG (Simulator::Now ().As (Time::S)
-                  << " ** BEGIN dump TwoHopNeighbor Set for OLSR Node " << m_mainAddress);
+    NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+                  << "s ** BEGIN dump TwoHopNeighbor Set for OLSR Node " << m_mainAddress);
     for (TwoHopNeighborSet::const_iterator tuple = twoHopNeighbors.begin ();
          tuple != twoHopNeighbors.end (); tuple++)
       {
@@ -1421,8 +1400,8 @@ RoutingProtocol::ProcessTc (const olsr::MessageHeader &msg,
 #ifdef NS3_LOG_ENABLE
   {
     const TopologySet &topology = m_state.GetTopologySet ();
-    NS_LOG_DEBUG (Simulator::Now ().As (Time::S)
-                  << " ** BEGIN dump TopologySet for OLSR Node " << m_mainAddress);
+    NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+                  << "s ** BEGIN dump TopologySet for OLSR Node " << m_mainAddress);
     for (TopologySet::const_iterator tuple = topology.begin ();
          tuple != topology.end (); tuple++)
       {
@@ -1667,7 +1646,7 @@ RoutingProtocol::SendPacket (Ptr<Packet> packet,
 }
 
 void
-RoutingProtocol::SendQueuedMessages  (void)
+RoutingProtocol::SendQueuedMessages ()
 {
   Ptr<Packet> packet = Create<Packet> ();
   int numMessages = 0;
@@ -1703,7 +1682,7 @@ RoutingProtocol::SendQueuedMessages  (void)
 }
 
 void
-RoutingProtocol::SendHello  (void)
+RoutingProtocol::SendHello ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -1811,7 +1790,7 @@ RoutingProtocol::SendHello  (void)
 }
 
 void
-RoutingProtocol::SendTc  (void)
+RoutingProtocol::SendTc ()
 {
   NS_LOG_FUNCTION (this);
 
@@ -1835,7 +1814,7 @@ RoutingProtocol::SendTc  (void)
 }
 
 void
-RoutingProtocol::SendMid  (void)
+RoutingProtocol::SendMid ()
 {
   olsr::MessageHeader msg;
   olsr::MessageHeader::Mid &mid = msg.GetMid ();
@@ -1880,7 +1859,7 @@ RoutingProtocol::SendMid  (void)
 }
 
 void
-RoutingProtocol::SendHna  (void)
+RoutingProtocol::SendHna ()
 {
 
   olsr::MessageHeader msg;
@@ -2003,7 +1982,7 @@ RoutingProtocol::LinkSensing (const olsr::MessageHeader &msg,
   Time now = Simulator::Now ();
   bool updated = false;
   bool created = false;
-  NS_LOG_DEBUG ("@" << now.As (Time::S) << ": Olsr node " << m_mainAddress
+  NS_LOG_DEBUG ("@" << now.GetSeconds () << ": Olsr node " << m_mainAddress
                     << ": LinkSensing(receiverIface=" << receiverIface
                     << ", senderIface=" << senderIface << ") BEGIN");
 
@@ -2052,9 +2031,8 @@ RoutingProtocol::LinkSensing (const olsr::MessageHeader &msg,
         case OLSR_LOST_LINK:
           linkTypeName = "LOST_LINK";
           break;
-        default:
-          linkTypeName = "(invalid value!)";
-
+        default: linkTypeName = "(invalid value!)";
+          
         }
 
       const char *neighborTypeName;
@@ -2139,7 +2117,7 @@ RoutingProtocol::LinkSensing (const olsr::MessageHeader &msg,
                                            &RoutingProtocol::LinkTupleTimerExpire, this,
                                            link_tuple->neighborIfaceAddr));
     }
-  NS_LOG_DEBUG ("@" << now.As (Time::S) << ": Olsr node " << m_mainAddress
+  NS_LOG_DEBUG ("@" << now.GetSeconds () << ": Olsr node " << m_mainAddress
                     << ": LinkSensing END");
 }
 
@@ -2360,8 +2338,8 @@ OLSR::mac_failed (Ptr<Packet> p)
 void
 RoutingProtocol::NeighborLoss (const LinkTuple &tuple)
 {
-  NS_LOG_DEBUG (Simulator::Now ().As (Time::S)
-                << ": OLSR Node " << m_mainAddress
+  NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+                << "s: OLSR Node " << m_mainAddress
                 << " LinkTuple " << tuple.neighborIfaceAddr << " -> neighbor loss.");
   LinkTupleUpdated (tuple, OLSR_WILL_DEFAULT);
   m_state.EraseTwoHopNeighborTuples (GetMainAddress (tuple.neighborIfaceAddr));
@@ -2416,8 +2394,8 @@ RoutingProtocol::LinkTupleAdded (const LinkTuple &tuple, uint8_t willingness)
 void
 RoutingProtocol::RemoveLinkTuple (const LinkTuple &tuple)
 {
-  NS_LOG_DEBUG (Simulator::Now ().As (Time::S)
-                << ": OLSR Node " << m_mainAddress
+  NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+                << "s: OLSR Node " << m_mainAddress
                 << " LinkTuple " << tuple << " REMOVED.");
 
   m_state.EraseNeighborTuple (GetMainAddress (tuple.neighborIfaceAddr));
@@ -2429,8 +2407,8 @@ RoutingProtocol::LinkTupleUpdated (const LinkTuple &tuple, uint8_t willingness)
 {
   // Each time a link tuple changes, the associated neighbor tuple must be recomputed
 
-  NS_LOG_DEBUG (Simulator::Now ().As (Time::S)
-                << ": OLSR Node " << m_mainAddress
+  NS_LOG_DEBUG (Simulator::Now ().GetSeconds ()
+                << "s: OLSR Node " << m_mainAddress
                 << " LinkTuple " << tuple << " UPDATED.");
 
   NeighborTuple *nb_tuple =
@@ -2531,7 +2509,7 @@ RoutingProtocol::RemoveTwoHopNeighborTuple (const TwoHopNeighborTuple &tuple)
 }
 
 void
-RoutingProtocol::IncrementAnsn  (void)
+RoutingProtocol::IncrementAnsn ()
 {
   m_ansn = (m_ansn + 1) % (OLSR_MAX_SEQ_NUM + 1);
 }
@@ -2635,14 +2613,14 @@ uint16_t RoutingProtocol::GetMessageSequenceNumber ()
 }
 
 void
-RoutingProtocol::HelloTimerExpire  (void)
+RoutingProtocol::HelloTimerExpire ()
 {
   SendHello ();
   m_helloTimer.Schedule (m_helloInterval);
 }
 
 void
-RoutingProtocol::TcTimerExpire  (void)
+RoutingProtocol::TcTimerExpire ()
 {
   if (m_state.GetMprSelectors ().size () > 0)
     {
@@ -2656,14 +2634,14 @@ RoutingProtocol::TcTimerExpire  (void)
 }
 
 void
-RoutingProtocol::MidTimerExpire  (void)
+RoutingProtocol::MidTimerExpire ()
 {
   SendMid ();
   m_midTimer.Schedule (m_midInterval);
 }
 
 void
-RoutingProtocol::HnaTimerExpire  (void)
+RoutingProtocol::HnaTimerExpire ()
 {
   if (m_state.GetAssociations ().size () > 0)
     {
@@ -2837,7 +2815,7 @@ RoutingProtocol::AssociationTupleTimerExpire (Ipv4Address gatewayAddr, Ipv4Addre
 }
 
 void
-RoutingProtocol::Clear  (void)
+RoutingProtocol::Clear ()
 {
   NS_LOG_FUNCTION_NOARGS ();
   m_table.clear ();
@@ -2993,12 +2971,10 @@ bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
           // multicast routing protocol can handle it.  It should be possible
           // to extend this to explicitly check whether it is a unicast
           // packet, and invoke the error callback if so
-          NS_LOG_LOGIC ("Null local delivery callback");
           return false;
         }
     }
 
-  NS_LOG_LOGIC ("Forward packet");
   // Forwarding
   Ptr<Ipv4Route> rtentry;
   RoutingTableEntry entry1, entry2;
@@ -3042,7 +3018,6 @@ bool RoutingProtocol::RouteInput  (Ptr<const Packet> p,
     }
   else
     {
-      NS_LOG_LOGIC ("No dynamic route, check network routes");
       if (m_hnaRoutingTable->RouteInput (p, header, idev, ucb, mcb, lcb, ecb))
         {
           return true;
@@ -3135,7 +3110,7 @@ RoutingProtocol::AddEntry (Ipv4Address const &dest,
 
 
 std::vector<RoutingTableEntry>
-RoutingProtocol::GetRoutingTableEntries  (void) const
+RoutingProtocol::GetRoutingTableEntries () const
 {
   std::vector<RoutingTableEntry> retval;
   for (std::map<Ipv4Address, RoutingTableEntry>::const_iterator iter = m_table.begin ();
@@ -3144,42 +3119,6 @@ RoutingProtocol::GetRoutingTableEntries  (void) const
       retval.push_back (iter->second);
     }
   return retval;
-}
-
-MprSet
-RoutingProtocol::GetMprSet  (void) const
-{
-  return m_state.GetMprSet ();
-}
-
-const MprSelectorSet &
-RoutingProtocol::GetMprSelectors  (void) const
-{
-  return m_state.GetMprSelectors ();
-}
-
-const NeighborSet &
-RoutingProtocol::GetNeighbors  (void) const
-{
-  return m_state.GetNeighbors ();
-}
-
-const TwoHopNeighborSet &
-RoutingProtocol::GetTwoHopNeighbors  (void) const
-{
-  return m_state.GetTwoHopNeighbors ();
-}
-
-const TopologySet &
-RoutingProtocol::GetTopologySet  (void) const
-{
-  return m_state.GetTopologySet ();
-}
-
-const OlsrState &
-RoutingProtocol::GetOlsrState (void) const
-{
-  return m_state;
 }
 
 int64_t
@@ -3236,7 +3175,7 @@ RoutingProtocol::Dump (void)
 }
 
 Ptr<const Ipv4StaticRouting>
-RoutingProtocol::GetRoutingTableAssociation  (void) const
+RoutingProtocol::GetRoutingTableAssociation () const
 {
   return m_hnaRoutingTable;
 }

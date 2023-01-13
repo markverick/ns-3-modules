@@ -179,6 +179,14 @@ SuperframeField::Deserialize (Buffer::Iterator i)
   return i;
 }
 
+/**
+ * output stream output operator
+ *
+ * \param os output stream
+ * \param superframeField The Superframe Specification Field
+ *
+ * \returns output stream
+ */
 std::ostream &
 operator << (std::ostream &os, const SuperframeField &superframeField)
 {
@@ -304,13 +312,6 @@ GtsFields::Deserialize (Buffer::Iterator i)
   return i;
 }
 
-std::ostream &
-operator << (std::ostream &os, const GtsFields &gtsFields)
-{
-  os << " GTS specification = "  << uint32_t (gtsFields.GetGtsSpecField ())
-     << ", GTS direction = "     << uint32_t (gtsFields.GetGtsDirectionField ());
-  return os;
-}
 
 /***********************************************************
  *              Pending Address Fields
@@ -471,6 +472,14 @@ PendingAddrFields::Deserialize (Buffer::Iterator i)
   return i;
 }
 
+/**
+ * output stream output operator
+ *
+ * \param os output stream
+ * \param PendingAddrField the Pending Address Specification Field
+ *
+ * \returns output stream
+ */
 std::ostream &
 operator << (std::ostream &os, const PendingAddrFields &pendingAddrFields)
 {

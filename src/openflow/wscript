@@ -9,12 +9,39 @@ def options(opt):
                    help=('Path to OFSID source for NS-3 OpenFlow Integration support'),
                    default='', dest='with_openflow')
 
-REQUIRED_BOOST_LIBS = ['system', 'filesystem']
+REQUIRED_BOOST_LIBS = ['system', 'signals', 'filesystem']
 
 def required_boost_libs(conf):
     conf.env['REQUIRED_BOOST_LIBS'] += REQUIRED_BOOST_LIBS
 
 def configure(conf):
+    if not conf.env['LIB_BOOST']:
+        conf.report_optional_feature("openflow", "NS-3 OpenFlow Integration", False,
+                                     "Required boost libraries not found")
+
+        # Add this module to the list of modules that won't be built
+        # if they are enabled.
+        conf.env['MODULES_NOT_BUILT'].append('openflow')
+        return 
+
+    present_boost_libs = []
+    for boost_lib_name in conf.env['LIB_BOOST']:
+        if boost_lib_name.startswith("boost_"):
+            boost_lib_name = boost_lib_name[6:]
+        if boost_lib_name.endswith("-mt"):
+            boost_lib_name = boost_lib_name[:-3]
+        present_boost_libs.append(boost_lib_name)
+
+    missing_boost_libs = [lib for lib in REQUIRED_BOOST_LIBS if lib not in present_boost_libs]
+    if missing_boost_libs != []:
+        conf.report_optional_feature("openflow", "NS-3 OpenFlow Integration", False,
+                                     "Required boost libraries not found, missing: %s" % ', '.join(missing_boost_libs))
+
+        # Add this module to the list of modules that won't be built
+        # if they are enabled.
+        conf.env['MODULES_NOT_BUILT'].append('openflow')
+        return 
+
     if Options.options.with_openflow:
         if os.path.isdir(Options.options.with_openflow):
             conf.msg("Checking for OpenFlow location", ("%s (given)" % Options.options.with_openflow))
@@ -40,10 +67,6 @@ def configure(conf):
                                      "OpenFlow not enabled (see option --with-openflow)")
         # Add this module to the list of modules that won't be built
         # if they are enabled.
-        conf.env['MODULES_NOT_BUILT'].append('openflow')
-        return 
-
-    if not conf.require_boost_incs('openflow', 'NS-3 OpenFlow Integration'):
         conf.env['MODULES_NOT_BUILT'].append('openflow')
         return 
 
@@ -116,9 +139,6 @@ int main()
                                  conf.env['OPENFLOW'], "openflow library not found")
     if conf.env['OPENFLOW']:
         conf.env['ENABLE_OPENFLOW'] = True
-        # Openflow library has some strncpy() usage that can trigger warnings
-        if conf.env['BUILD_PROFILE'] == 'optimized':
-            conf.env.append_value('CXXFLAGS', '-Wno-stringop-truncation')
     else:
         # Add this module to the list of modules that won't be built
         # if they are enabled.
@@ -133,7 +153,6 @@ def build(bld):
 
     # Build the Switch module
     obj = bld.create_ns3_module('openflow', ['internet'])
-    obj.use.append('BOOST')
     obj.source = [
         ]
 

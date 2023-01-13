@@ -103,11 +103,6 @@ public:
    * \param filename the file name
    */
   void SetFilename (std::string filename);
-  /**
-   * Set if to save deprecated attributes
-   * \param saveDeprecated the deprecated attributes save policy
-   */
-  void SetSaveDeprecated (bool saveDeprecated);
 
   /**
    * Configure the default values
@@ -121,27 +116,17 @@ public:
 private:
   enum Mode m_mode; ///< store mode
   enum FileFormat m_fileFormat; ///< store format
-  bool m_saveDeprecated; ///< save deprecated attributes
   std::string m_filename; ///< store file name
   FileConfig *m_file; ///< configuration file
 };
 
 /**
- * \brief Stream insertion operator.
- *
- * \param [in] os The reference to the output stream.
- * \param [in] mode The configStore mode.
- * \returns The reference to the output stream.
+ * @{
+ * \ingroup configstore
  */
 std::ostream & operator << (std::ostream & os, ConfigStore::Mode & mode);
-/**
- * \brief Stream insertion operator.
- *
- * \param [in] os The reference to the output stream.
- * \param [in] format The configStore file format.
- * \returns The reference to the output stream.
- */
 std::ostream & operator << (std::ostream & os, ConfigStore::FileFormat & format);
+/**@}*/
 
 }  // namespace ns3
 

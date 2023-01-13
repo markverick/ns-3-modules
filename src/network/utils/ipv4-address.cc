@@ -110,6 +110,17 @@ Ipv4Mask::Ipv4Mask (char const *mask)
 }
 
 bool 
+Ipv4Mask::IsEqual (Ipv4Mask other) const
+{
+  NS_LOG_FUNCTION (this << other);
+  if (other.m_mask == m_mask) {
+      return true;
+    } else {
+      return false;
+    }
+}
+
+bool 
 Ipv4Mask::IsMatch (Ipv4Address a, Ipv4Address b) const
 {
   NS_LOG_FUNCTION (this << a << b);
@@ -186,10 +197,6 @@ Ipv4Mask::GetPrefixLength (void) const
   return tmp; 
 }
 
-/**
- *  Value of a not-yet-initialized IPv4 address, corresponding to 102.102.102.102.
- *  This is totally arbitrary.
- */
 static constexpr uint32_t UNINITIALIZED = 0x66666666U;
 
 Ipv4Address::Ipv4Address ()
@@ -415,7 +422,7 @@ Ipv4Address::GetLoopback (void)
 
 size_t Ipv4AddressHash::operator() (Ipv4Address const &x) const
 { 
-  return std::hash<uint32_t>()(x.Get ());
+  return x.Get ();
 }
 
 std::ostream& operator<< (std::ostream& os, Ipv4Address const& address)

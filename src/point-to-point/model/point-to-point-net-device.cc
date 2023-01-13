@@ -228,7 +228,7 @@ PointToPointNetDevice::SetDataRate (DataRate bps)
 void
 PointToPointNetDevice::SetInterframeGap (Time t)
 {
-  NS_LOG_FUNCTION (this << t.As (Time::S));
+  NS_LOG_FUNCTION (this << t.GetSeconds ());
   m_tInterframeGap = t;
 }
 
@@ -251,7 +251,7 @@ PointToPointNetDevice::TransmitStart (Ptr<Packet> p)
   Time txTime = m_bps.CalculateBytesTxTime (p->GetSize ());
   Time txCompleteTime = txTime + m_tInterframeGap;
 
-  NS_LOG_LOGIC ("Schedule TransmitCompleteEvent in " << txCompleteTime.As (Time::S));
+  NS_LOG_LOGIC ("Schedule TransmitCompleteEvent in " << txCompleteTime.GetSeconds () << "sec");
   Simulator::Schedule (txCompleteTime, &PointToPointNetDevice::TransmitComplete, this);
 
   bool result = m_channel->TransmitStart (p, this, txTime);
@@ -653,7 +653,6 @@ PointToPointNetDevice::PppToEther (uint16_t proto)
     {
     case 0x0021: return 0x0800;   //IPv4
     case 0x0057: return 0x86DD;   //IPv6
-    case 0x0077: return 0x7777;   //NDN
     default: NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
     }
   return 0;
@@ -667,7 +666,6 @@ PointToPointNetDevice::EtherToPpp (uint16_t proto)
     {
     case 0x0800: return 0x0021;   //IPv4
     case 0x86DD: return 0x0057;   //IPv6
-    case 0x7777: return 0x0077;   //NDN
     default: NS_ASSERT_MSG (false, "PPP Protocol number not defined!");
     }
   return 0;

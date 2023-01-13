@@ -66,19 +66,6 @@ MobilityModel::GetPosition (void) const
   return DoGetPosition ();
 }
 Vector
-MobilityModel::GetPositionWithReference (const Vector& referencePosition) const
-{
-  return DoGetPositionWithReference (referencePosition);
-}
-
-// Default implementation ignores referencePosition
-Vector
-MobilityModel::DoGetPositionWithReference (const Vector& referencePosition) const
-{
-  return DoGetPosition ();
-}
-
-Vector
 MobilityModel::GetVelocity (void) const
 {
   return DoGetVelocity ();

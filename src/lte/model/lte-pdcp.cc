@@ -174,10 +174,9 @@ LtePdcp::SetStatus (Status s)
 ////////////////////////////////////////
 
 void
-LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params)
+LtePdcp::DoTransmitPdcpSdu (Ptr<Packet> p)
 {
-  NS_LOG_FUNCTION (this << m_rnti << static_cast <uint16_t> (m_lcid) << params.pdcpSdu->GetSize ());
-  Ptr<Packet> p = params.pdcpSdu;
+  NS_LOG_FUNCTION (this << m_rnti << (uint32_t) m_lcid << p->GetSize ());
 
   // Sender timestamp
   PdcpTag pdcpTag (Simulator::Now ());
@@ -199,12 +198,12 @@ LtePdcp::DoTransmitPdcpSdu (LtePdcpSapProvider::TransmitPdcpSduParameters params
 
   m_txPdu (m_rnti, m_lcid, p->GetSize ());
 
-  LteRlcSapProvider::TransmitPdcpPduParameters txParams;
-  txParams.rnti = m_rnti;
-  txParams.lcid = m_lcid;
-  txParams.pdcpPdu = p;
+  LteRlcSapProvider::TransmitPdcpPduParameters params;
+  params.rnti = m_rnti;
+  params.lcid = m_lcid;
+  params.pdcpPdu = p;
 
-  m_rlcSapProvider->TransmitPdcpPdu (txParams);
+  m_rlcSapProvider->TransmitPdcpPdu (params);
 }
 
 void

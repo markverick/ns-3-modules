@@ -82,14 +82,6 @@ public:
   Ipv6InterfaceAddress (Ipv6Address address, Ipv6Prefix prefix);
 
   /**
-   * \brief Constructor.
-   * \param address IPv6 address to set
-   * \param prefix IPv6 prefix
-   * \param onLink on-link property
-   */
-  Ipv6InterfaceAddress (Ipv6Address address, Ipv6Prefix prefix, bool onLink);
-
-  /**
    * \brief Copy constructor.
    * \param o object to copy
    */
@@ -161,18 +153,6 @@ public:
    */
   uint32_t GetNsDadUid () const;
 
-  /**
-   * \brief Get the on-link property.
-   * \param onLink the on-link property
-   */
-  void SetOnLink (bool onLink);
-
-  /**
-   * \brief Get the on-link property.
-   * \return on-link flag
-   */
-  bool GetOnLink () const;
-
 #if 0
   /**
    * \brief Start the DAD timer.
@@ -206,11 +186,6 @@ private:
    * \brief Scope of the address.
    */
   Scope_e m_scope;
-
-  /**
-   * \brief The address belongs to an on-link network.
-   */
-  bool m_onLink;
 
   /**
    * \brief Equal to operator.

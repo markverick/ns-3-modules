@@ -41,12 +41,7 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId (void);
-
-  TypeId GetInstanceTypeId (void) const override;
-  void Serialize (TagBuffer i) const override;
-  void Deserialize (TagBuffer i) override;
-  uint32_t GetSerializedSize () const override;
-  void Print (std::ostream &os) const override;
+  TypeId GetInstanceTypeId (void) const;
 
   /**
    * Create a AmpduTag with the default =0 no A-MPDU
@@ -64,6 +59,11 @@ public:
    * Set the remaining duration of the A-MPDU.
    */
   void SetRemainingAmpduDuration (Time duration);
+
+  void Serialize (TagBuffer i) const;
+  void Deserialize (TagBuffer i);
+  uint32_t GetSerializedSize () const;
+  void Print (std::ostream &os) const;
 
   /**
    * \return the remaining number of MPDUs in an A-MPDU

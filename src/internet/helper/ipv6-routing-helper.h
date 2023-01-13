@@ -120,7 +120,6 @@ public:
    * \brief prints the neighbor cache of all nodes at a particular time.
    * \param printTime the time at which the neighbor cache is supposed to be printed.
    * \param stream The output stream object to use
-   * \param unit The time unit to be used in the report
    *
    * This method calls the PrintNdiscCache() method of the
    * NdiscCache associated with each Ipv6Interface stored in the Ipv6 object, for all nodes at the
@@ -130,13 +129,12 @@ public:
      \endverbatim
    * Note that the MAC address is printed as "type"-"size"-"actual address"
    */
-  static void PrintNeighborCacheAllAt (Time printTime, Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S);
+  static void PrintNeighborCacheAllAt (Time printTime, Ptr<OutputStreamWrapper> stream);
 
   /**
    * \brief prints the neighbor cache of all nodes at regular intervals specified by user.
    * \param printInterval the time interval for which the neighbor cache is supposed to be printed.
    * \param stream The output stream object to use
-   * \param unit The time unit to be used in the report
    *
    * This method calls the PrintNdiscCache() method of the
    * NdiscCache associated with each Ipv6Interface stored in the Ipv6 object, for all nodes at the
@@ -146,14 +144,13 @@ public:
      \endverbatim
    * Note that the MAC address is printed as "type"-"size"-"actual address"
    */
-  static void PrintNeighborCacheAllEvery (Time printInterval, Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S);
+  static void PrintNeighborCacheAllEvery (Time printInterval, Ptr<OutputStreamWrapper> stream);
 
   /**
    * \brief prints the neighbor cache of a node at a particular time.
    * \param printTime the time at which the neighbor cache is supposed to be printed.
    * \param node The node ptr for which we need the neighbor cache to be printed
    * \param stream The output stream object to use
-   * \param unit The time unit to be used in the report
    *
    * This method calls the PrintNdiscCache() method of the
    * NdiscCache associated with each Ipv6Interface stored in the Ipv6 object, for all nodes at the
@@ -163,14 +160,13 @@ public:
      \endverbatim
    * Note that the MAC address is printed as "type"-"size"-"actual address"
    */
-  static void PrintNeighborCacheAt (Time printTime, Ptr<Node> node, Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S);
+  static void PrintNeighborCacheAt (Time printTime, Ptr<Node> node, Ptr<OutputStreamWrapper> stream);
 
   /**
    * \brief prints the neighbor cache of a node at regular intervals specified by user.
    * \param printInterval the time interval for which the neighbor cache is supposed to be printed.
    * \param node The node ptr for which we need the neighbor cache to be printed
    * \param stream The output stream object to use
-   * \param unit The time unit to be used in the report
    *
    * This method calls the PrintNdiscCache() method of the
    * NdiscCache associated with each Ipv6Interface stored in the Ipv6 object, for all nodes at the
@@ -180,7 +176,7 @@ public:
      \endverbatim
    * Note that the MAC address is printed as "type"-"size"-"actual address"
    */
-  static void PrintNeighborCacheEvery (Time printInterval, Ptr<Node> node, Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S);
+  static void PrintNeighborCacheEvery (Time printInterval, Ptr<Node> node, Ptr<OutputStreamWrapper> stream);
 
   /**
    * \brief Request a specified routing protocol &lt;T&gt; from Ipv6RoutingProtocol protocol
@@ -224,7 +220,6 @@ private:
    * \brief prints the neighbor cache of a node.
    * \param node The node ptr for which we need the neighbor cache to be printed
    * \param stream The output stream object to use
-   * \param unit The time unit to be used in the report
    *
    * This method calls the PrintNdiscCache() method of the
    * NdiscCache associated with each Ipv6Interface stored in the Ipv6 object, for all nodes at the
@@ -234,14 +229,13 @@ private:
      \endverbatim
    * Note that the MAC address is printed as "type"-"size"-"actual address"
    */
-  static void PrintNdiscCache (Ptr<Node> node, Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S);
+  static void PrintNdiscCache (Ptr<Node> node, Ptr<OutputStreamWrapper> stream);
 
   /**
    * \brief prints the neighbor cache of a node at regular intervals specified by user.
    * \param printInterval the time interval for which the neighbor cache is supposed to be printed.
    * \param node The node ptr for which we need the neighbor cache to be printed
    * \param stream The output stream object to use
-   * \param unit The time unit to be used in the report
    *
    * This method calls the PrintNdiscCache() method of the
    * NdiscCache associated with each Ipv6Interface stored in the Ipv6 object, for all nodes at the
@@ -251,7 +245,7 @@ private:
      \endverbatim
    * Note that the MAC address is printed as "type"-"size"-"actual address"
    */
-  static void PrintNdiscCacheEvery (Time printInterval, Ptr<Node> node, Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S);
+  static void PrintNdiscCacheEvery (Time printInterval, Ptr<Node> node, Ptr<OutputStreamWrapper> stream);
 };
 
 /**

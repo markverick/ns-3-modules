@@ -40,10 +40,9 @@ namespace ns3 {
 typedef void (*NodePrinter)(std::ostream &os);
 
 /**
- * \ingroup logging
- * Default node id printer implementation.
+ * Default Node printer.
  *
- * \param [in,out] os The output stream to print the node id on.
+ * \param [in,out] os The output stream to print on.
  */
 void DefaultNodePrinter (std::ostream &os);
 

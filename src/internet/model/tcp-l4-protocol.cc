@@ -42,9 +42,7 @@
 #include "tcp-socket-factory-impl.h"
 #include "tcp-socket-base.h"
 #include "tcp-congestion-ops.h"
-#include "tcp-cubic.h"
 #include "tcp-recovery-ops.h"
-#include "tcp-prr-recovery.h"
 #include "rtt-estimator.h"
 
 #include <vector>
@@ -80,12 +78,12 @@ TcpL4Protocol::GetTypeId (void)
                    MakeTypeIdChecker ())
     .AddAttribute ("SocketType",
                    "Socket type of TCP objects.",
-                   TypeIdValue (TcpCubic::GetTypeId ()),
+                   TypeIdValue (TcpNewReno::GetTypeId ()),
                    MakeTypeIdAccessor (&TcpL4Protocol::m_congestionTypeId),
                    MakeTypeIdChecker ())
     .AddAttribute ("RecoveryType",
                    "Recovery type of TCP objects.",
-                   TypeIdValue (TcpPrrRecovery::GetTypeId ()),
+                   TypeIdValue (TcpClassicRecovery::GetTypeId ()),
                    MakeTypeIdAccessor (&TcpL4Protocol::m_recoveryTypeId),
                    MakeTypeIdChecker ())
     .AddAttribute ("SocketList", "The list of sockets associated to this protocol.",
@@ -468,8 +466,8 @@ TcpL4Protocol::Receive (Ptr<Packet> packet,
 
           src = Ipv6Address::MakeIpv4MappedAddress (incomingIpHeader.GetSource ());
           dst = Ipv6Address::MakeIpv4MappedAddress (incomingIpHeader.GetDestination ());
-          ipv6Header.SetSource (src);
-          ipv6Header.SetDestination (dst);
+          ipv6Header.SetSourceAddress (src);
+          ipv6Header.SetDestinationAddress (dst);
           return (this->Receive (packet, ipv6Header, fakeInterface));
         }
 
@@ -503,8 +501,8 @@ TcpL4Protocol::Receive (Ptr<Packet> packet,
                         Ipv6Header const &incomingIpHeader,
                         Ptr<Ipv6Interface> interface)
 {
-  NS_LOG_FUNCTION (this << packet << incomingIpHeader.GetSource () <<
-                   incomingIpHeader.GetDestination ());
+  NS_LOG_FUNCTION (this << packet << incomingIpHeader.GetSourceAddress () <<
+                   incomingIpHeader.GetDestinationAddress ());
 
   TcpHeader incomingTcpHeader;
   IpL4Protocol::RxStatus checksumControl;
@@ -514,8 +512,8 @@ TcpL4Protocol::Receive (Ptr<Packet> packet,
   // order to avoid re-calculating TCP checksums for v4-mapped packets?
 
   checksumControl = PacketReceived (packet, incomingTcpHeader,
-                                    incomingIpHeader.GetSource (),
-                                    incomingIpHeader.GetDestination ());
+                                    incomingIpHeader.GetSourceAddress (),
+                                    incomingIpHeader.GetDestinationAddress ());
 
   if (checksumControl != IpL4Protocol::RX_OK)
     {
@@ -523,21 +521,21 @@ TcpL4Protocol::Receive (Ptr<Packet> packet,
     }
 
   Ipv6EndPointDemux::EndPoints endPoints =
-    m_endPoints6->Lookup (incomingIpHeader.GetDestination (),
+    m_endPoints6->Lookup (incomingIpHeader.GetDestinationAddress (),
                           incomingTcpHeader.GetDestinationPort (),
-                          incomingIpHeader.GetSource (),
+                          incomingIpHeader.GetSourceAddress (),
                           incomingTcpHeader.GetSourcePort (), interface);
   if (endPoints.empty ())
     {
       NS_LOG_LOGIC ("TcpL4Protocol " << this << " received a packet but"
                     " no endpoints matched." <<
-                    " destination IP: " << incomingIpHeader.GetDestination () <<
+                    " destination IP: " << incomingIpHeader.GetDestinationAddress () <<
                     " destination port: "<< incomingTcpHeader.GetDestinationPort () <<
-                    " source IP: " << incomingIpHeader.GetSource () <<
+                    " source IP: " << incomingIpHeader.GetSourceAddress () <<
                     " source port: "<< incomingTcpHeader.GetSourcePort ());
 
-      NoEndPointsFound (incomingTcpHeader, incomingIpHeader.GetSource (),
-                        incomingIpHeader.GetDestination ());
+      NoEndPointsFound (incomingTcpHeader, incomingIpHeader.GetSourceAddress (),
+                        incomingIpHeader.GetDestinationAddress ());
 
       return IpL4Protocol::RX_ENDPOINT_CLOSED;
     }
@@ -635,8 +633,8 @@ TcpL4Protocol::SendPacketV6 (Ptr<Packet> packet, const TcpHeader &outgoing,
   if (ipv6 != 0)
     {
       Ipv6Header header;
-      header.SetSource (saddr);
-      header.SetDestination (daddr);
+      header.SetSourceAddress (saddr);
+      header.SetDestinationAddress (daddr);
       header.SetNextHeader (PROT_NUMBER);
       Socket::SocketErrno errno_;
       Ptr<Ipv6Route> route;

@@ -65,32 +65,16 @@ public:
   virtual void  Enqueue (Ptr<Packet> packet, Mac48Address to);
   virtual bool  SupportsSendFrom () const;
   virtual void  SetLinkUpCallback (Callback<void> linkUp);
-
-  /// \name Each mesh point interface must know the mesh point address
-  ///@{
-  /**
-   * Set the mesh point address
-   * \param addr the mesh point address
-   */
-  void SetMeshPointAddress (Mac48Address addr);
-  /**
-   * Get the mesh point address
-   * \return The mesh point address
-   */
+  ///\name Each mesh point interface must know the mesh point address
+  // \{
+  void SetMeshPointAddress (Mac48Address);
   Mac48Address GetMeshPointAddress () const;
-  ///@}
-
-  /// \name Beacons
-  ///@{
-  /**
-   *  Set maximum initial random delay before first beacon
-   *  \param interval maximum random interval
-   */
+  // \}
+  ///\name Beacons
+  // \{
+  /// Set maximum initial random delay before first beacon
   void SetRandomStartDelay (Time interval);
-  /**
-   *  Set interval between two successive beacons
-   *  \param interval beacon interval
-   */
+  /// Set interval between two successive beacons
   void SetBeaconInterval (Time interval);
   /// \return interval between two beacons
   Time GetBeaconInterval () const;
@@ -110,7 +94,7 @@ public:
    * \attention User of ShiftTbtt () must take care to not shift it to the past.
    */
   void ShiftTbtt (Time shift);
-  ///@}
+  // \}
 
   /**
    * Install plugin.
@@ -156,30 +140,15 @@ public:
   bool CheckSupportedRates (SupportedRates rates) const;
   /// \return list of supported bitrates
   SupportedRates GetSupportedRates () const;
-
-  /// \name Metric Calculation routines:
-  ///@{
-  /**
-   * Set the link metric callback
-   * \param cb the callback
-   */
+  ///\name Metric Calculation routines:
+  // \{
   void SetLinkMetricCallback (Callback<uint32_t, Mac48Address, Ptr<MeshWifiInterfaceMac> > cb);
-  /**
-   * Get the link metric
-   * \param peerAddress the peer address
-   * \return The metric
-   */
   uint32_t GetLinkMetric (Mac48Address peerAddress);
-  ///@}
-
-  /**
-   * \brief Report statistics
-   * \param os the output stream
-   */
-  void Report (std::ostream & os) const;
-  /// Reset statistics function
+  // \}
+  ///\brief Statistics:
+  void Report (std::ostream &) const;
+  /// Reset statistics
   void ResetStats ();
-
   /**
    * Enable/disable beacons
    *
@@ -187,11 +156,17 @@ public:
    */
   void SetBeaconGeneration (bool enable);
   /**
-   * Finish configuration based on the WifiStandard being provided
+   * Get phy standard in use
    *
-   * \param standard the WifiStandard being configured
+   * \returns the wifi phy standard
    */
-  virtual void ConfigureStandard (enum WifiStandard standard);
+  WifiPhyStandard GetPhyStandard () const;
+  /**
+   * Finish configuration based on the WifiPhyStandard being provided
+   *
+   * \param standard the WifiPhyStandard being configured
+   */
+  virtual void FinishConfigureStandard (enum WifiPhyStandard standard);
   /**
    * Assign a fixed random variable stream number to the random variables
    * used by this model.  Return the number of streams (possibly zero) that
@@ -234,8 +209,8 @@ private:
 
   virtual void DoInitialize ();
 
-  /// \name Mesh timing intervals
-  ///@{
+  ///\name Mesh timing intervals
+  // \{
   /// whether beaconing is enabled
   bool m_beaconEnable;
   /// Beaconing interval.
@@ -244,7 +219,7 @@ private:
   Time m_randomStart;
   /// Time for the next frame
   Time m_tbtt;
-  ///@}
+  // \}
 
   /// Mesh point address
   Mac48Address m_mpAddress;
@@ -273,8 +248,8 @@ private:
   };
   Statistics m_stats; ///< statistics
 
-  /// Current standard: needed to configure metric
-  WifiStandard m_standard;
+  /// Current PHY standard: needed to configure metric
+  WifiPhyStandard m_standard;
 
   /// Add randomness to beacon generation
   Ptr<UniformRandomVariable> m_coefficient;

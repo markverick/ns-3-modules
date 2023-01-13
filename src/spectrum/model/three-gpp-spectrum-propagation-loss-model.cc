@@ -23,7 +23,7 @@
 #include "ns3/log.h"
 #include "three-gpp-spectrum-propagation-loss-model.h"
 #include "ns3/net-device.h"
-#include "ns3/phased-array-model.h"
+#include "ns3/three-gpp-antenna-array-model.h"
 #include "ns3/node.h"
 #include "ns3/channel-condition-model.h"
 #include "ns3/double.h"
@@ -41,7 +41,6 @@ NS_OBJECT_ENSURE_REGISTERED (ThreeGppSpectrumPropagationLossModel);
 ThreeGppSpectrumPropagationLossModel::ThreeGppSpectrumPropagationLossModel ()
 {
   NS_LOG_FUNCTION (this);
-  m_uniformRv = CreateObject<UniformRandomVariable> ();
 }
 
 ThreeGppSpectrumPropagationLossModel::~ThreeGppSpectrumPropagationLossModel ()
@@ -70,14 +69,7 @@ ThreeGppSpectrumPropagationLossModel::GetTypeId (void)
                   StringValue("ns3::ThreeGppChannelModel"),
                   MakePointerAccessor (&ThreeGppSpectrumPropagationLossModel::SetChannelModel,
                                        &ThreeGppSpectrumPropagationLossModel::GetChannelModel),
-                                       MakePointerChecker<MatrixBasedChannelModel> ())
-    .AddAttribute ("vScatt",
-                   "Maximum speed of the vehicle in the layout (see 3GPP TR 37.885 v15.3.0, Sec. 6.2.3)."
-                   "Used to compute the additional contribution for the Doppler of" 
-                   "delayed (reflected) paths",
-                   DoubleValue (0.0),
-                   MakeDoubleAccessor (&ThreeGppSpectrumPropagationLossModel::m_vScatt),
-                   MakeDoubleChecker<double> (0.0))
+      MakePointerChecker<MatrixBasedChannelModel> ())
     ;
   return tid;
 }
@@ -95,7 +87,7 @@ ThreeGppSpectrumPropagationLossModel::GetChannelModel () const
 }
 
 void
-ThreeGppSpectrumPropagationLossModel::AddDevice (Ptr<NetDevice> n, Ptr<const PhasedArrayModel> a)
+ThreeGppSpectrumPropagationLossModel::AddDevice (Ptr<NetDevice> n, Ptr<const ThreeGppAntennaArrayModel> a)
 {
   NS_ASSERT_MSG (m_deviceAntennaMap.find (n->GetNode ()->GetId ()) == m_deviceAntennaMap.end (), "Device is already present in the map");
   m_deviceAntennaMap.insert (std::make_pair (n->GetNode ()->GetId (), a));
@@ -121,10 +113,10 @@ ThreeGppSpectrumPropagationLossModel::GetChannelModelAttribute (const std::strin
   m_channelModel->GetAttribute (name, value);
 }
 
-PhasedArrayModel::ComplexVector
+ThreeGppAntennaArrayModel::ComplexVector
 ThreeGppSpectrumPropagationLossModel::CalcLongTerm (Ptr<const MatrixBasedChannelModel::ChannelMatrix> params,
-                                                    const PhasedArrayModel::ComplexVector &sW,
-                                                    const PhasedArrayModel::ComplexVector &uW) const
+                                                    const ThreeGppAntennaArrayModel::ComplexVector &sW,
+                                                    const ThreeGppAntennaArrayModel::ComplexVector &uW) const
 {
   NS_LOG_FUNCTION (this);
 
@@ -134,7 +126,7 @@ ThreeGppSpectrumPropagationLossModel::CalcLongTerm (Ptr<const MatrixBasedChannel
   NS_LOG_DEBUG ("CalcLongTerm with sAntenna " << sAntenna << " uAntenna " << uAntenna);
   //store the long term part to reduce computation load
   //only the small scale fading needs to be updated if the large scale parameters and antenna weights remain unchanged.
-  PhasedArrayModel::ComplexVector longTerm;
+  ThreeGppAntennaArrayModel::ComplexVector longTerm;
   uint8_t numCluster = static_cast<uint8_t> (params->m_channel[0][0].size ());
 
   for (uint8_t cIndex = 0; cIndex < numCluster; cIndex++)
@@ -156,7 +148,7 @@ ThreeGppSpectrumPropagationLossModel::CalcLongTerm (Ptr<const MatrixBasedChannel
 
 Ptr<SpectrumValue>
 ThreeGppSpectrumPropagationLossModel::CalcBeamformingGain (Ptr<SpectrumValue> txPsd,
-                                                           PhasedArrayModel::ComplexVector longTerm,
+                                                           ThreeGppAntennaArrayModel::ComplexVector longTerm,
                                                            Ptr<const MatrixBasedChannelModel::ChannelMatrix> params,
                                                            const ns3::Vector &sSpeed, const ns3::Vector &uSpeed) const
 {
@@ -171,35 +163,18 @@ ThreeGppSpectrumPropagationLossModel::CalcBeamformingGain (Ptr<SpectrumValue> tx
   // NOTE the update of Doppler is simplified by only taking the center angle of
   // each cluster in to consideration.
   double slotTime = Simulator::Now ().GetSeconds ();
-  PhasedArrayModel::ComplexVector doppler;
+  ThreeGppAntennaArrayModel::ComplexVector doppler;
   for (uint8_t cIndex = 0; cIndex < numCluster; cIndex++)
     {
-      // Compute alpha and D as described in 3GPP TR 37.885 v15.3.0, Sec. 6.2.3
-      // These terms account for an additional Doppler contribution due to the 
-      // presence of moving objects in the sorrounding environment, such as in 
-      // vehicular scenarios.
-      // This contribution is applied only to the delayed (reflected) paths and 
-      // must be properly configured by setting the value of 
-      // m_vScatt, which is defined as "maximum speed of the vehicle in the 
-      // layout". 
-      // By default, m_vScatt is set to 0, so there is no additional Doppler 
-      // contribution.
-      double alpha = 0; 
-      double D = 0; 
-      if (cIndex != 0)
-      {
-        alpha = m_uniformRv->GetValue (-1, 1);
-        D = m_uniformRv->GetValue (-m_vScatt, m_vScatt);
-      }
-      
       //cluster angle angle[direction][n],where, direction = 0(aoa), 1(zoa).
+      // TODO should I include the "alfa" term for the Doppler of delayed paths?
       double temp_doppler = 2 * M_PI * ((sin (params->m_angle[MatrixBasedChannelModel::ZOA_INDEX][cIndex] * M_PI / 180) * cos (params->m_angle[MatrixBasedChannelModel::AOA_INDEX][cIndex] * M_PI / 180) * uSpeed.x
                                          + sin (params->m_angle[MatrixBasedChannelModel::ZOA_INDEX][cIndex] * M_PI / 180) * sin (params->m_angle[MatrixBasedChannelModel::AOA_INDEX][cIndex] * M_PI / 180) * uSpeed.y
                                          + cos (params->m_angle[MatrixBasedChannelModel::ZOA_INDEX][cIndex] * M_PI / 180) * uSpeed.z)
                                          + (sin (params->m_angle[MatrixBasedChannelModel::ZOD_INDEX][cIndex] * M_PI / 180) * cos (params->m_angle[MatrixBasedChannelModel::AOD_INDEX][cIndex] * M_PI / 180) * sSpeed.x
                                          + sin (params->m_angle[MatrixBasedChannelModel::ZOD_INDEX][cIndex] * M_PI / 180) * sin (params->m_angle[MatrixBasedChannelModel::AOD_INDEX][cIndex] * M_PI / 180) * sSpeed.y
-                                         + cos (params->m_angle[MatrixBasedChannelModel::ZOD_INDEX][cIndex] * M_PI / 180) * sSpeed.z) + 2 * alpha * D)
-                           * slotTime * GetFrequency () / 3e8;
+                                         + cos (params->m_angle[MatrixBasedChannelModel::ZOD_INDEX][cIndex] * M_PI / 180) * sSpeed.z))
+        * slotTime * GetFrequency () / 3e8;
       doppler.push_back (exp (std::complex<double> (0, temp_doppler)));
     }
 
@@ -226,17 +201,17 @@ ThreeGppSpectrumPropagationLossModel::CalcBeamformingGain (Ptr<SpectrumValue> tx
   return tempPsd;
 }
 
-PhasedArrayModel::ComplexVector
+ThreeGppAntennaArrayModel::ComplexVector
 ThreeGppSpectrumPropagationLossModel::GetLongTerm (uint32_t aId, uint32_t bId,
                                                    Ptr<const MatrixBasedChannelModel::ChannelMatrix> channelMatrix,
-                                                   const PhasedArrayModel::ComplexVector &aW,
-                                                   const PhasedArrayModel::ComplexVector &bW) const
+                                                   const ThreeGppAntennaArrayModel::ComplexVector &aW,
+                                                   const ThreeGppAntennaArrayModel::ComplexVector &bW) const
 {
-  PhasedArrayModel::ComplexVector longTerm; // vector containing the long term component for each cluster
+  ThreeGppAntennaArrayModel::ComplexVector longTerm; // vector containing the long term component for each cluster
 
   // check if the channel matrix was generated considering a as the s-node and
   // b as the u-node or viceversa
-  PhasedArrayModel::ComplexVector sW, uW;
+  ThreeGppAntennaArrayModel::ComplexVector sW, uW;
   if (!channelMatrix->IsReverse (aId, bId))
   {
     sW = aW;
@@ -311,22 +286,28 @@ ThreeGppSpectrumPropagationLossModel::DoCalcRxPowerSpectralDensity (Ptr<const Sp
 
   // retrieve the antenna of device a
   NS_ASSERT_MSG (m_deviceAntennaMap.find (aId) != m_deviceAntennaMap.end (), "Antenna not found for node " << aId);
-  Ptr<const PhasedArrayModel> aAntenna = m_deviceAntennaMap.at (aId);
+  Ptr<const ThreeGppAntennaArrayModel> aAntenna = m_deviceAntennaMap.at (aId);
   NS_LOG_DEBUG ("a node " << a->GetObject<Node> () << " antenna " << aAntenna);
 
   // retrieve the antenna of the device b
   NS_ASSERT_MSG (m_deviceAntennaMap.find (bId) != m_deviceAntennaMap.end (), "Antenna not found for device " << bId);
-  Ptr<const PhasedArrayModel> bAntenna = m_deviceAntennaMap.at (bId);
+  Ptr<const ThreeGppAntennaArrayModel> bAntenna = m_deviceAntennaMap.at (bId);
   NS_LOG_DEBUG ("b node " << bId << " antenna " << bAntenna);
+
+  if (aAntenna->IsOmniTx () || bAntenna->IsOmniTx () )
+    {
+      NS_LOG_LOGIC ("Omni transmission, do nothing.");
+      return rxPsd;
+    }
 
   Ptr<const MatrixBasedChannelModel::ChannelMatrix> channelMatrix = m_channelModel->GetChannel (a, b, aAntenna, bAntenna);
 
   // get the precoding and combining vectors
-  PhasedArrayModel::ComplexVector aW = aAntenna->GetBeamformingVector ();
-  PhasedArrayModel::ComplexVector bW = bAntenna->GetBeamformingVector ();
+  ThreeGppAntennaArrayModel::ComplexVector aW = aAntenna->GetBeamformingVector ();
+  ThreeGppAntennaArrayModel::ComplexVector bW = bAntenna->GetBeamformingVector ();
 
   // retrieve the long term component
-  PhasedArrayModel::ComplexVector longTerm = GetLongTerm (aId, bId, channelMatrix, aW, bW);
+  ThreeGppAntennaArrayModel::ComplexVector longTerm = GetLongTerm (aId, bId, channelMatrix, aW, bW);
 
   // apply the beamforming gain
   rxPsd = CalcBeamformingGain (rxPsd, longTerm, channelMatrix, a->GetVelocity (), b->GetVelocity ());

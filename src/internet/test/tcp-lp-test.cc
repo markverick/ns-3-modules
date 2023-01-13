@@ -32,34 +32,23 @@ namespace ns3 {
 NS_LOG_COMPONENT_DEFINE ("TcpLpTestSuite");
 
 /**
- * \ingroup internet-test
- * \ingroup tests
- *
  * \brief Testing the behaviour common to New Reno
  */
 class TcpLpToNewReno : public TestCase
 {
 public:
-  /**
-   * Constructor
-   * \param cWnd Congestion window size
-   * \param segmentSize Segment size
-   * \param segmentsAcked Segments acked
-   * \param ssThresh Slow start threshold
-   * \param rtt RTT
-   * \param name Test case name
-   */
   TcpLpToNewReno (uint32_t cWnd, uint32_t segmentSize,
-                  uint32_t segmentsAcked, uint32_t ssThresh, Time rtt, const std::string &name);
+                  uint32_t segmentsAcked,uint32_t ssThresh, Time rtt, const std::string &name);
 
 private:
   virtual void DoRun (void);
-  uint32_t m_cWnd;          //!< Congestion window size
-  uint32_t m_segmentSize;   //!< Segment size
-  uint32_t m_ssThresh;      //!< Slow start threshold
-  uint32_t m_segmentsAcked; //!< Segments acked
-  Time m_rtt;               //!< RTT
-  Ptr<TcpSocketState> m_state;  //!< TCP socket state
+  void ExecuteTest (void);
+  uint32_t m_cWnd;
+  uint32_t m_segmentSize;
+  uint32_t m_ssThresh;
+  uint32_t m_segmentsAcked;
+  Time m_rtt;
+  Ptr<TcpSocketState> m_state;
 };
 
 TcpLpToNewReno::TcpLpToNewReno (uint32_t cWnd, uint32_t segmentSize,
@@ -75,6 +64,14 @@ TcpLpToNewReno::TcpLpToNewReno (uint32_t cWnd, uint32_t segmentSize,
 
 void
 TcpLpToNewReno::DoRun ()
+{
+  Simulator::Schedule (Seconds (0.0), &TcpLpToNewReno::ExecuteTest, this);
+  Simulator::Run ();
+  Simulator::Destroy ();
+}
+
+void
+TcpLpToNewReno::ExecuteTest ()
 {
   m_state = CreateObject <TcpSocketState> ();
   m_state->m_cWnd = m_cWnd;
@@ -99,38 +96,26 @@ TcpLpToNewReno::DoRun ()
 
   NS_TEST_ASSERT_MSG_EQ (m_state->m_cWnd.Get (), state->m_cWnd.Get (),
                          "cWnd has not updated correctly");
-  Simulator::Run ();
-  Simulator::Destroy ();
 }
-
 /**
- * \ingroup internet-test
- * \ingroup tests
- *
- * \brief Testing TcpLp when cwd exceeds threshold
+ * \brief Testing TcpLp when owd exceeds threshold
  */
+
 class TcpLpInferenceTest1 : public TestCase
 {
 public:
-  /**
-   * Constructor
-   * \param cWnd Congestion window size
-   * \param segmentSize Segment size
-   * \param segmentsAcked Segments acked
-   * \param rtt RTT
-   * \param name Test case name
-   */
   TcpLpInferenceTest1 (uint32_t cWnd, uint32_t segmentSize,
                        uint32_t segmentsAcked, Time rtt, const std::string &name);
 
 private:
   virtual void DoRun (void);
+  void ExecuteTest (void);
 
-  uint32_t m_cWnd;          //!< Congestion window size
-  uint32_t m_segmentSize;   //!< Segment size
-  uint32_t m_segmentsAcked; //!< Segments acked
-  Time m_rtt;               //!< RTT
-  Ptr<TcpSocketState> m_state;  //!< TCP socket state
+  uint32_t m_cWnd;
+  uint32_t m_segmentSize;
+  uint32_t m_segmentsAcked;
+  Time m_rtt;
+  Ptr<TcpSocketState> m_state;
 };
 
 TcpLpInferenceTest1::TcpLpInferenceTest1 (uint32_t cWnd, uint32_t segmentSize,
@@ -145,6 +130,14 @@ TcpLpInferenceTest1::TcpLpInferenceTest1 (uint32_t cWnd, uint32_t segmentSize,
 
 void
 TcpLpInferenceTest1::DoRun ()
+{
+  Simulator::Schedule (Seconds (0.0), &TcpLpInferenceTest1::ExecuteTest, this);
+  Simulator::Run ();
+  Simulator::Destroy ();
+}
+
+void
+TcpLpInferenceTest1::ExecuteTest ()
 {
   m_state = CreateObject <TcpSocketState> ();
   m_state->m_cWnd = m_cWnd;
@@ -164,38 +157,26 @@ TcpLpInferenceTest1::DoRun ()
   m_cWnd =  m_cWnd / 2;
   NS_TEST_ASSERT_MSG_EQ (m_state->m_cWnd.Get (), m_cWnd,
                          "cWnd has not updated correctly");
-  Simulator::Run ();
-  Simulator::Destroy ();
 }
 
 /**
- * \ingroup internet-test
- * \ingroup tests
- *
  * \brief Testing TcpLp when it is inference phase
  */
 class TcpLpInferenceTest2 : public TestCase
 {
 public:
-  /**
-   * Constructor
-   * \param cWnd Congestion window size
-   * \param segmentSize Segment size
-   * \param segmentsAcked Segments acked
-   * \param rtt RTT
-   * \param name Test case name
-   */
   TcpLpInferenceTest2 (uint32_t cWnd, uint32_t segmentSize,
                        uint32_t segmentsAcked, Time rtt, const std::string &name);
 
 private:
   virtual void DoRun (void);
+  void ExecuteTest (void);
 
-  uint32_t m_cWnd;          //!< Congestion window size
-  uint32_t m_segmentSize;   //!< Segment size
-  uint32_t m_segmentsAcked; //!< Segments acked
-  Time m_rtt;               //!< RTT
-  Ptr<TcpSocketState> m_state;  //!< TCP socket state
+  uint32_t m_cWnd;
+  uint32_t m_segmentSize;
+  uint32_t m_segmentsAcked;
+  Time m_rtt;
+  Ptr<TcpSocketState> m_state;
 };
 
 TcpLpInferenceTest2::TcpLpInferenceTest2 (uint32_t cWnd, uint32_t segmentSize,uint32_t segmentsAcked, Time rtt, const std::string &name)
@@ -209,6 +190,14 @@ TcpLpInferenceTest2::TcpLpInferenceTest2 (uint32_t cWnd, uint32_t segmentSize,ui
 
 void
 TcpLpInferenceTest2::DoRun ()
+{
+  Simulator::Schedule (Seconds (0.0), &TcpLpInferenceTest2::ExecuteTest, this);
+  Simulator::Run ();
+  Simulator::Destroy ();
+}
+
+void
+TcpLpInferenceTest2::ExecuteTest ()
 {
   m_state = CreateObject <TcpSocketState> ();
   m_state->m_cWnd = m_cWnd;
@@ -232,29 +221,19 @@ TcpLpInferenceTest2::DoRun ()
 
   NS_TEST_ASSERT_MSG_EQ (m_state->m_cWnd.Get (), m_cWnd,
                          "cWnd has not updated correctly");
-  Simulator::Run ();
-  Simulator::Destroy ();
 }
 
-/**
- * \ingroup internet-test
- * \ingroup tests
- *
- * Test the behaviour common to New Reno
- */
-class TcpLpTestSuite : public TestSuite
+static class TcpLpTestSuite : public TestSuite
 {
 public:
   TcpLpTestSuite () : TestSuite ("tcp-lp-test", UNIT)
   {
-    AddTestCase (new TcpLpToNewReno (4 * 1446, 1446, 2, 2 * 1446, MilliSeconds (100), "LP falls to New Reno if the cwd is within threshold"), TestCase::QUICK);
+    AddTestCase (new TcpLpToNewReno (4 * 1446, 1446,2, 2 * 1446, MilliSeconds (100), "LP falls to New Reno if the owd is within threshold"), TestCase::QUICK);
 
-    AddTestCase (new TcpLpInferenceTest1 (2 * 1446, 1446, 2, MilliSeconds (100), "LP enters Inference phase when cwd exceeds threshold for the first time"), TestCase::QUICK);
+    AddTestCase (new TcpLpInferenceTest1 (2 * 1446, 1446,2, MilliSeconds (100), "LP enters Inference phase when owd exceeds threshold for the first time"), TestCase::QUICK);
 
-    AddTestCase (new TcpLpInferenceTest2 (2 * 1446, 1446, 2, MilliSeconds (100), "LP reduces cWnd to 1 if cwd exceeds threshold in inference phase"), TestCase::QUICK);
+    AddTestCase (new TcpLpInferenceTest2 (2 * 1446, 1446,2, MilliSeconds (100), "LP reduces cWnd to 1 if owd exceeds threshold in inference phase"), TestCase::QUICK);
   }
-};
-
-static TcpLpTestSuite g_tcplpTest; //!< static var for test initialization
+} g_tcplpTest;
 
 }

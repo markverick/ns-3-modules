@@ -155,7 +155,7 @@ public:
    *
    * \return the starting sequence number.
    */
-  uint16_t GetStartingSequence (void) const override;
+  uint16_t GetStartingSequence (void) const;
 
   /**
    * Get the distance between the current starting sequence number and the

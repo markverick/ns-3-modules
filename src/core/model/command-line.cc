@@ -28,10 +28,6 @@
 #include "type-id.h"
 #include "string.h"
 
-#if defined (ENABLE_BUILD_VERSION)
-#include "version.h"
-#endif
-
 #include <algorithm>  // transform
 #include <cctype>     // tolower
 #include <cstdlib>    // exit, getenv
@@ -68,7 +64,7 @@ CommandLine::CommandLine (const std::string filename)
   std::string basename = SystemPath::Split (filename).back ();
   m_shortName = basename.substr (0, basename.rfind (".cc"));
 }
-
+  
 CommandLine::CommandLine (const CommandLine &cmd)
 {
   Copy (cmd);
@@ -141,7 +137,7 @@ CommandLine::Parse (std::vector<std::string> args)
   NS_LOG_FUNCTION (this << args.size () << args);
 
   PrintDoxygenUsage ();
-
+  
   m_nonOptionCount = 0;
 
   if (args.size () > 0)
@@ -332,28 +328,11 @@ CommandLine::PrintHelp (std::ostream &os) const
     << "    --PrintGroup=[group]:        Print all TypeIds of group.\n"
     << "    --PrintTypeIds:              Print all TypeIds.\n"
     << "    --PrintAttributes=[typeid]:  Print all attributes of typeid.\n"
-    << "    --PrintVersion:              Print the ns-3 version.\n"
     << "    --PrintHelp:                 Print this help message.\n"
     << std::endl;
 }
 
 #include <unistd.h>  // getcwd
-std::string
-CommandLine::GetVersion () const
-{
-#if defined (ENABLE_BUILD_VERSION)
-  return Version::LongVersion ();
-#else
-  return std::string{"Build version support is not enabled, reconfigure with "
-         "--enable-build-version flag"};
-#endif
-}
-
-void
-CommandLine::PrintVersion (std::ostream & os) const
-{
-  os << GetVersion () << std::endl;
-}
 
 void
 CommandLine::PrintDoxygenUsage (void) const
@@ -365,7 +344,7 @@ CommandLine::PrintDoxygenUsage (void) const
     {
       return;
     }
-
+ 
   if (m_shortName.size () == 0)
     {
       NS_FATAL_ERROR ("No file name on example-to-run; forgot to use CommandLine var (__FILE__)?");
@@ -377,19 +356,19 @@ CommandLine::PrintDoxygenUsage (void) const
                     m_nonOptions.begin () + m_NNonOptions);
 
   std::string outf = SystemPath::Append (std::string (envVar), m_shortName + ".command-line");
-
+  
   NS_LOG_INFO ("Writing CommandLine doxy to " << outf);
-
+  
   std::fstream os (outf, std::fstream::out);
 
-
+  
   os << "/**\n \\file " << m_shortName << ".cc\n"
      << "<h3>Usage</h3>\n"
      << "<code>$ ./waf --run \"" << m_shortName
      << (m_options.size ()  ? " [Program Options]" : "")
      << (nonOptions.size () ? " [Program Arguments]" : "")
      << "\"</code>\n";
-
+    
   if (m_usage.length ())
     {
       os << m_usage << std::endl;
@@ -598,12 +577,6 @@ CommandLine::HandleArgument (const std::string &name, const std::string &value) 
       PrintHelp (std::cout);
       std::exit (0);
     }
-  if (name == "PrintVersion" || name == "version")
-    {
-      //Print the version, then exit the program
-      PrintVersion (std::cout);
-      std::exit (0);
-    }
   else if (name == "PrintGroups")
     {
       // method below never returns.
@@ -784,6 +757,12 @@ CommandLine::Item::HasDefault () const
   return false;
 }
 
+std::string
+CommandLine::Item::GetDefault () const
+{
+  return "";
+}
+
 bool
 CommandLine::StringItem::Parse (const std::string value)
 {
@@ -841,15 +820,6 @@ CommandLineHelper::UserItemParse<bool> (const std::string value, bool & val)
       iss >> val;
       return !iss.bad () && !iss.fail ();
     }
-}
-
-template <>
-std::string
-CommandLineHelper::GetDefault<Time> (const Time & val)
-{
-  std::ostringstream oss;
-  oss << val.As ();
-  return oss.str ();
 }
 
 template <>

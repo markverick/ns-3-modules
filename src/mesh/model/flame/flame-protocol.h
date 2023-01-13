@@ -124,7 +124,6 @@ public:
                            const Mac48Address destination, Ptr<Packet> packet, uint16_t& protocolType);
   /**
    * \brief Install FLAME on given mesh point.
-   * \param mp the MeshPointDevice
    * \returns true if successful
    *
    * Installing protocol causes installation of its interface MAC plugins.
@@ -132,7 +131,7 @@ public:
    * Also MP aggregates all installed protocols, FLAME protocol can be accessed
    * via MeshPointDevice::GetObject<flame::FlameProtocol>();
    */
-  bool Install (Ptr<MeshPointDevice> mp);
+  bool Install (Ptr<MeshPointDevice>);
   /**
    * Get address of this instance
    * \returns the MAC address

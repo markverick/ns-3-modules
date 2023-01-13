@@ -60,14 +60,8 @@ public:
   /**
    * \brief Determines if channel descriptors sent in the current frame are
    * required to be updated
-   *
-   * \param updateDcd currently unused (assume true)
-   * \param updateUcd currently unused (assume true)
-   * \param [out] sendDcd DCD must be updated
-   * \param [out] sendUcd UCD must be updated
-   *
    */
-  void GetChannelDescriptorsToUpdate (bool& updateDcd, bool& updateUcd, bool& sendDcd, bool& sendUcd);
+  void GetChannelDescriptorsToUpdate (bool&, bool&, bool&, bool&);
   uint32_t CalculateAllocationStartTime (void);
   void AddUplinkAllocation (OfdmUlMapIe &ulMapIe,
                             const uint32_t &allocationSize,

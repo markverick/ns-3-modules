@@ -47,10 +47,9 @@ public:
    * \return the object TypeId
    */
   static TypeId GetTypeId ();
-
-  TypeId GetInstanceTypeId () const override;
-  uint32_t GetSerializedSize () const override;
-  void Serialize (Buffer::Iterator start) const override;
+  TypeId GetInstanceTypeId () const;
+  virtual uint32_t GetSerializedSize () const;
+  virtual void Serialize (Buffer::Iterator start) const;
   /**
    * \attention This variant should not be used but is implemented due to
    * backward compatibility reasons
@@ -58,7 +57,7 @@ public:
    * \param start buffer location to start deserializing from
    * \return number of bytes deserialized
    */
-  uint32_t Deserialize (Buffer::Iterator start) override;
+  virtual uint32_t Deserialize (Buffer::Iterator start);
   /**
    * Deserialize a number of WifiInformationElements 
    *
@@ -68,8 +67,8 @@ public:
    * \param end ending buffer location
    * \return number of bytes deserialized
    */
-  uint32_t Deserialize (Buffer::Iterator start, Buffer::Iterator end) override;
-  void Print (std::ostream &os) const override;
+  virtual uint32_t Deserialize (Buffer::Iterator start, Buffer::Iterator end);
+  virtual void Print (std::ostream &os) const;
 
   /**
    * \brief Needed when you try to deserialize a lonely IE inside other header

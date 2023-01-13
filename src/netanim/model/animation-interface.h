@@ -44,7 +44,6 @@
 #include "ns3/rectangle.h"
 #include "ns3/ipv4.h"
 #include "ns3/ipv4-l3-protocol.h"
-#include "ns3/wifi-phy.h"
 
 namespace ns3 {
 
@@ -1048,19 +1047,18 @@ private:
   /**
    * wifi Phy transmit PSDU begin trace function
    * \param context the context
-   * \param psduMap the PSDU map
+   * \param psdu the PSDU
    * \param txVector the TXVECTOR
    * \param txPowerW the tx power in Watts
    */
-  void WifiPhyTxBeginTrace (std::string context, WifiConstPsduMap psduMap, WifiTxVector txVector, double txPowerW);
+  void WifiPhyTxBeginTrace (std::string context, Ptr<const WifiPsdu> psdu, WifiTxVector txVector, double txPowerW);
   /**
    * wifi Phy receive begin trace function
    *
    * \param context the context
    * \param p the packet
-   * \param rxPowersW the receive power per channel band in Watts
    */
-  void WifiPhyRxBeginTrace (std::string context, Ptr<const Packet> p, RxPowerWattPerChannelBand rxPowersW);
+  void WifiPhyRxBeginTrace (std::string context, Ptr<const Packet> p);
   /**
    * WAVE Phy transmit begin trace function
    * \param context the context

@@ -160,11 +160,4 @@ ChannelScheduler::StopSch (uint32_t channelNumber)
   return ReleaseAccess (channelNumber);
 }
 
-void
-ChannelScheduler::DoDispose (void)
-{
-  NS_LOG_FUNCTION (this);
-  m_device = 0;
-}
-
 } // namespace ns3

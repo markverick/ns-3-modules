@@ -97,7 +97,7 @@ RemSpectrumPhy::SetDevice (Ptr<NetDevice> d)
 }
 
 Ptr<MobilityModel>
-RemSpectrumPhy::GetMobility () const
+RemSpectrumPhy::GetMobility ()
 {
   return m_mobility;
 }
@@ -115,7 +115,7 @@ RemSpectrumPhy::GetRxSpectrumModel () const
 }
 
 Ptr<AntennaModel>
-RemSpectrumPhy::GetRxAntenna () const
+RemSpectrumPhy::GetRxAntenna ()
 {
   return 0;
 }

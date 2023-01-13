@@ -24,7 +24,6 @@
 #include <ns3/mac16-address.h>
 #include <ns3/mac64-address.h>
 #include <ns3/log.h>
-#include <vector>
 
 
 using namespace ns3;
@@ -85,9 +84,9 @@ LrWpanPacketTestCase::DoRun (void)
 
   // Test serialization and deserialization
   uint32_t size = p->GetSerializedSize ();
-  std::vector<uint8_t> buffer (size);
-  p->Serialize (buffer.data (), size);
-  Ptr<Packet> p2 = Create<Packet> (buffer.data (), size, true);
+  uint8_t buffer[size];
+  p->Serialize (buffer, size);
+  Ptr<Packet> p2 = Create<Packet> (buffer, size, true);
 
 
   p2->Print (std::cout);

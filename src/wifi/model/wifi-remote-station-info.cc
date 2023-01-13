@@ -37,7 +37,7 @@ WifiRemoteStationInfo::~WifiRemoteStationInfo ()
 double
 WifiRemoteStationInfo::CalculateAveragingCoefficient ()
 {
-  double retval = std::exp ( ((m_lastUpdate - Now ()) / m_memoryTime).GetDouble () );
+  double retval = std::exp (static_cast<double> (m_lastUpdate.GetMicroSeconds () - Simulator::Now ().GetMicroSeconds ()) / m_memoryTime.GetMicroSeconds ());
   m_lastUpdate = Simulator::Now ();
   return retval;
 }

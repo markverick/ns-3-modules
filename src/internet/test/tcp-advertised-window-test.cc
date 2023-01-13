@@ -353,11 +353,6 @@ TcpAdvertisedWindowTest::InvalidAwndCb (uint16_t oldAwnd, uint16_t newAwnd)
 }
 //-----------------------------------------------------------------------------
 
-/**
- * \ingroup internet-tests
- * \ingroup test
- * \brief Test the TCP's advertised window size when there is a loss of specific packets.
- */
 class TcpAdvWindowOnLossTest : public TcpGeneralTest
 {
 public:
@@ -366,7 +361,7 @@ public:
    * \param desc description
    * \param size segment size
    * \param packets number of packets to send
-   * \param toDrop packets to be dropped
+   * \param lossRatio error ratio
    */
   TcpAdvWindowOnLossTest (const std::string &desc, uint32_t size, uint32_t packets,
                           std::vector<uint32_t> &toDrop);

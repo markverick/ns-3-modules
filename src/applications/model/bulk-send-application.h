@@ -151,13 +151,8 @@ private:
   void ConnectionFailed (Ptr<Socket> socket);
   /**
    * \brief Send more data as soon as some has been transmitted.
-   *
-   * Used in socket's SetSendCallback - params are forced by it.
-   *
-   * \param socket socket to use
-   * \param unused actually unused
    */
-  void DataSend (Ptr<Socket> socket, uint32_t unused);
+  void DataSend (Ptr<Socket>, uint32_t); // for socket's SetSendCallback
 };
 
 } // namespace ns3

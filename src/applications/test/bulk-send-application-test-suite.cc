@@ -39,12 +39,6 @@
 
 using namespace ns3;
 
-/**
- * \ingroup applications-test
- * \ingroup tests
- *
- * Basic test, checks that the right quantity of packets are sent and received.
- */
 class BulkSendBasicTestCase : public TestCase
 {
 public:
@@ -53,19 +47,10 @@ public:
 
 private:
   virtual void DoRun (void);
-  /**
-   * Record a packet successfully sent
-   * \param p the packet
-   */
   void SendTx (Ptr<const Packet> p);
-  /**
-   * Record a packet successfully received
-   * \param p the packet
-   * \param addr the sender's address
-   */
   void ReceiveRx (Ptr<const Packet> p, const Address& addr); 
-  uint64_t m_sent {0};      //!< number of bytes sent
-  uint64_t m_received {0};  //!< number of bytes received
+  uint64_t m_sent {0};
+  uint64_t m_received {0};
 };
 
 BulkSendBasicTestCase::BulkSendBasicTestCase ()
@@ -133,14 +118,9 @@ BulkSendBasicTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (m_received, 300000, "Received the full 300000 bytes");
 }
 
-/**
- * \ingroup applications-test
- * \ingroup tests
- *
- * This test checks that the sequence number is sent and received in sequence
- * despite the sending application having to pause and restart its sending
- * due to a temporarily full transmit buffer.
- */
+// This test checks that the sequence number is sent and received in sequence
+// despite the sending application having to pause and restart its sending
+// due to a temporarily full transmit buffer.
 class BulkSendSeqTsSizeTestCase : public TestCase
 {
 public:
@@ -149,28 +129,14 @@ public:
 
 private:
   virtual void DoRun (void);
-  /**
-   * Record a packet successfully sent
-   * \param p the packet
-   * \param from source address
-   * \param to destination address
-   * \param header the SeqTsSizeHeader
-   */
   void SendTx (Ptr<const Packet> p, const Address &from, const Address & to, const SeqTsSizeHeader &header);
-  /**
-   * Record a packet successfully received
-   * \param p the packet
-   * \param from source address
-   * \param to destination address
-   * \param header the SeqTsSizeHeader
-   */
   void ReceiveRx (Ptr<const Packet> p, const Address &from, const Address & to, const SeqTsSizeHeader &header);
-  uint64_t m_sent {0};            //!< number of bytes sent
-  uint64_t m_received {0};        //!< number of bytes received
-  uint64_t m_seqTxCounter {0};    //!< Counter for Sequences on Tx
-  uint64_t m_seqRxCounter {0};    //!< Counter for Sequences on Rx
-  Time m_lastTxTs {Seconds (0)};  //!< Last recored timestamp on Tx
-  Time m_lastRxTs {Seconds (0)};  //!< Last recored timestamp on Rx
+  uint64_t m_sent {0};
+  uint64_t m_received {0};
+  uint64_t m_seqTxCounter {0};
+  uint64_t m_seqRxCounter {0};
+  Time m_lastTxTs {Seconds (0)};
+  Time m_lastRxTs {Seconds (0)};
 };
 
 BulkSendSeqTsSizeTestCase::BulkSendSeqTsSizeTestCase ()
@@ -250,12 +216,6 @@ BulkSendSeqTsSizeTestCase::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (m_received, 300000, "Received the full 300000 bytes");
 }
 
-/**
- * \ingroup applications-test
- * \ingroup tests
- *
- * \brief BulkSend TestSuite
- */
 class BulkSendTestSuite : public TestSuite
 {
 public:
@@ -269,5 +229,5 @@ BulkSendTestSuite::BulkSendTestSuite ()
   AddTestCase (new BulkSendSeqTsSizeTestCase, TestCase::QUICK);
 }
 
-static BulkSendTestSuite g_bulkSendTestSuite; //!< Static variable for test initialization
+static BulkSendTestSuite g_bulkSendTestSuite;
 

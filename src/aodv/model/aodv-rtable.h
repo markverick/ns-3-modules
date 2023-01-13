@@ -340,9 +340,8 @@ public:
   /**
    * Print packet to trace file
    * \param stream The output stream
-   * \param unit The time unit to use (default Time::S)
    */
-  void Print (Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S) const;
+  void Print (Ptr<OutputStreamWrapper> stream) const;
 
 private:
   /// Valid Destination Sequence Number flag
@@ -396,20 +395,10 @@ public:
   RoutingTable (Time t);
   ///\name Handle lifetime of invalid route
   //\{
-  /**
-   * Get the lifetime of a bad link
-   *
-   * \return the lifetime of a bad link
-   */
   Time GetBadLinkLifetime () const
   {
     return m_badLinkLifetime;
   }
-  /**
-   * Set the lifetime of a bad link
-   *
-   * \param t the lifetime of a bad link
-   */
   void SetBadLinkLifetime (Time t)
   {
     m_badLinkLifetime = t;
@@ -491,9 +480,8 @@ public:
   /**
    * Print routing table
    * \param stream the output stream
-   * \param unit The time unit to use (default Time::S)
    */
-  void Print (Ptr<OutputStreamWrapper> stream, Time::Unit unit = Time::S) const;
+  void Print (Ptr<OutputStreamWrapper> stream) const;
 
 private:
   /// The routing table

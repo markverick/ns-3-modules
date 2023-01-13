@@ -117,7 +117,6 @@ WaveNetDevice::DoDispose (void)
       mac->Dispose ();
     }
   m_macEntities.clear ();
-  m_phyEntities.clear ();
   m_channelCoordinator->Dispose ();
   m_channelManager->Dispose ();
   m_channelScheduler->Dispose ();
@@ -127,7 +126,7 @@ WaveNetDevice::DoDispose (void)
   m_channelScheduler = 0;
   m_vsaManager = 0;
   // chain up.
-  WifiNetDevice::DoDispose ();
+  NetDevice::DoDispose ();
 }
 
 void
@@ -636,6 +635,16 @@ WaveNetDevice::Send (Ptr<Packet> packet, const Address& dest, uint16_t protocol)
   return true;
 }
 
+Ptr<Node>
+WaveNetDevice::GetNode (void) const
+{
+  return m_node;
+}
+void
+WaveNetDevice::SetNode (Ptr<Node> node)
+{
+  m_node = node;
+}
 bool
 WaveNetDevice::NeedsArp (void) const
 {

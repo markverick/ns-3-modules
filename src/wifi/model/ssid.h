@@ -47,11 +47,11 @@ public:
   Ssid (std::string s);
 
   // Implementations of pure virtual methods of WifiInformationElement
-  WifiInformationElementId ElementId () const override;
-  uint8_t GetInformationFieldSize () const override;
-  void SerializeInformationField (Buffer::Iterator start) const override;
+  WifiInformationElementId ElementId () const;
+  uint8_t GetInformationFieldSize () const;
+  void SerializeInformationField (Buffer::Iterator start) const;
   uint8_t DeserializeInformationField (Buffer::Iterator start,
-                                       uint8_t length) override;
+                                       uint8_t length);
 
   /**
    * Check if the two SSIDs are equal.

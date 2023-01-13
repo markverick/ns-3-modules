@@ -16,7 +16,6 @@
  * Authors: Faker Moatamri <faker.moatamri@sophia.inria.fr>
  *          Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-
 #include "display-functions.h"
 #include "raw-text-config.h"
 #include "ns3/config.h"
@@ -24,7 +23,7 @@
 #include "ns3/pointer.h"
 
 namespace ns3 {
-/*
+/**
  * This function includes the name of the attribute or the editable value
  * in the second column
  */
@@ -32,12 +31,8 @@ void
 cell_data_function_col_1 (GtkTreeViewColumn *col, GtkCellRenderer *renderer,
                           GtkTreeModel *model, GtkTreeIter *iter, gpointer user_data)
 {
-  ModelNode *node = 0;
+  ModelNode *node;
   gtk_tree_model_get (model, iter, COL_NODE, &node, -1);
-  if (!node)
-    {
-      return;
-    }
   if (node->type == ModelNode::NODE_ATTRIBUTE)
     {
       StringValue str;
@@ -51,7 +46,7 @@ cell_data_function_col_1 (GtkTreeViewColumn *col, GtkCellRenderer *renderer,
       g_object_set (renderer, "editable", FALSE, (char*) 0);
     }
 }
-/*
+/**
  * This function includes the name of the object, pointer, vector or vector item
  * in the first column
  */
@@ -59,16 +54,11 @@ void
 cell_data_function_col_0 (GtkTreeViewColumn *col, GtkCellRenderer *renderer, GtkTreeModel *model,
                           GtkTreeIter *iter, gpointer user_data)
 {
-  ModelNode *node = 0;
+  ModelNode *node;
   gtk_tree_model_get (model, iter, COL_NODE, &node, -1);
   g_object_set (renderer, "editable", FALSE, (char*) 0);
-  if (!node)
-    {
-      return;
-    }
-
   switch (node->type)
-  {
+    {
     case ModelNode::NODE_OBJECT:
       g_object_set (renderer, "text", node->object->GetInstanceTypeId ().GetName ().c_str (), (char*) 0);
       break;
@@ -88,10 +78,10 @@ cell_data_function_col_0 (GtkTreeViewColumn *col, GtkCellRenderer *renderer, Gtk
     case ModelNode::NODE_ATTRIBUTE:
       g_object_set (renderer, "text", node->name.c_str (), (char*) 0);
       break;
-  }
+    }
 }
 
-/*
+/**
  * This is the callback called when the value of an attribute is changed
  */
 void
@@ -101,17 +91,13 @@ cell_edited_callback (GtkCellRendererText *cell, gchar *path_string,
   GtkTreeModel *model = GTK_TREE_MODEL (user_data);
   GtkTreeIter iter;
   gtk_tree_model_get_iter_from_string (model, &iter, path_string);
-  ModelNode *node = 0;
+  ModelNode *node;
   gtk_tree_model_get (model, &iter, COL_NODE, &node, -1);
-  if (!node)
-    {
-      return;
-    }
   NS_ASSERT (node->type == ModelNode::NODE_ATTRIBUTE);
   node->object->SetAttribute (node->name, StringValue (new_text));
 }
 
-/*
+/**
  * This function gets the column number 0 or 1 from the mouse
  * click
  */
@@ -128,7 +114,7 @@ get_col_number_from_tree_view_column (GtkTreeViewColumn *col)
   return num;
 }
 
-/*
+/**
  * This function displays the tooltip for an object, pointer, vector
  * item or an attribute
  */
@@ -150,20 +136,16 @@ cell_tooltip_callback (GtkWidget *widget, gint x, gint y, gboolean keyboard_tip,
     }
   int col = get_col_number_from_tree_view_column (column);
 
-  ModelNode *node = 0;
+  ModelNode *node;
   gtk_tree_model_get (model, &iter, COL_NODE, &node, -1);
-  if (!node)
-    {
-      return FALSE;
-    }
 
   switch (node->type)
-  {
+    {
     case ModelNode::NODE_OBJECT:
       if (col == 0)
         {
           std::string tip = "This object is of type "
-              + node->object->GetInstanceTypeId ().GetName ();
+            + node->object->GetInstanceTypeId ().GetName ();
           gtk_tooltip_set_text (tooltip, tip.c_str ());
           return TRUE;
         }
@@ -174,7 +156,7 @@ cell_tooltip_callback (GtkWidget *widget, gint x, gint y, gboolean keyboard_tip,
           PointerValue ptr;
           node->object->GetAttribute (node->name, ptr);
           std::string tip = "This object is of type "
-              + ptr.GetObject ()->GetInstanceTypeId ().GetName ();
+            + ptr.GetObject ()->GetInstanceTypeId ().GetName ();
           gtk_tooltip_set_text (tooltip, tip.c_str ());
           return TRUE;
         }
@@ -185,7 +167,7 @@ cell_tooltip_callback (GtkWidget *widget, gint x, gint y, gboolean keyboard_tip,
       if (col == 0)
         {
           std::string tip = "This object is of type "
-              + node->object->GetInstanceTypeId ().GetName ();
+            + node->object->GetInstanceTypeId ().GetName ();
           gtk_tooltip_set_text (tooltip, tip.c_str ());
           return TRUE;
         }
@@ -195,7 +177,7 @@ cell_tooltip_callback (GtkWidget *widget, gint x, gint y, gboolean keyboard_tip,
         uint32_t attrIndex = 0;
         TypeId tid;
         for (tid = node->object->GetInstanceTypeId (); tid.HasParent (); tid
-        = tid.GetParent ())
+               = tid.GetParent ())
           {
             for (uint32_t i = 0; i < tid.GetAttributeN (); ++i)
               {
@@ -206,7 +188,7 @@ cell_tooltip_callback (GtkWidget *widget, gint x, gint y, gboolean keyboard_tip,
                   }
               }
           }
-        out: if (col == 0)
+out: if (col == 0)
           {
             std::string tip = tid.GetAttribute (attrIndex).help;
             gtk_tooltip_set_text (tooltip, tip.c_str ());
@@ -226,11 +208,11 @@ cell_tooltip_callback (GtkWidget *widget, gint x, gint y, gboolean keyboard_tip,
         return TRUE;
       }
       break;
-  }
+    }
   return FALSE;
 }
 
-/*
+/**
  * This is the main view opening the widget, getting tooltips and drawing the
  * tree of attributes...
  */
@@ -246,7 +228,7 @@ create_view (GtkTreeStore *model)
   g_signal_connect (view, "query-tooltip", (GCallback) cell_tooltip_callback, 0);
 
   gtk_tree_view_set_grid_lines (GTK_TREE_VIEW (view), GTK_TREE_VIEW_GRID_LINES_BOTH);
-  // gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
+  gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
 
   col = gtk_tree_view_column_new ();
   gtk_tree_view_column_set_title (col, "Object Attributes");
@@ -271,7 +253,68 @@ create_view (GtkTreeStore *model)
   return view;
 }
 
-/*
+/**
+ * This is the action done when the user presses on the save button.
+ * It will save the config to a file.
+ *
+ * \param button (unused)
+ * \param user_data
+ */
+void
+save_clicked (GtkButton *button, gpointer user_data)
+{
+  GtkWidget *parent_window = GTK_WIDGET (user_data);
+  GtkWidget *dialog;
+
+  dialog = gtk_file_chooser_dialog_new ("Save File", GTK_WINDOW (parent_window), GTK_FILE_CHOOSER_ACTION_SAVE,
+                                        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_SAVE,
+                                        GTK_RESPONSE_ACCEPT, (char *) 0);
+  gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog),
+                                                  TRUE);
+
+  gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), "config.txt");
+
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+      char *filename;
+
+      filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+      RawTextConfigSave config;
+      config.SetFilename (filename);
+      config.Attributes ();
+      g_free (filename);
+    }
+
+  gtk_widget_destroy (dialog);
+}
+
+/**
+ * If the user presses the button load, it will load the config file into memory.
+ */
+void
+load_clicked (GtkButton *button, gpointer user_data)
+{
+  GtkWidget *parent_window = GTK_WIDGET (user_data);
+  GtkWidget *dialog;
+
+  dialog = gtk_file_chooser_dialog_new ("Open File", GTK_WINDOW (parent_window), GTK_FILE_CHOOSER_ACTION_OPEN,
+                                        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN,
+                                        GTK_RESPONSE_ACCEPT, (char *) 0);
+
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
+    {
+      char *filename;
+
+      filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+      RawTextConfigLoad config;
+      config.SetFilename (filename);
+      config.Attributes ();
+    }
+
+  gtk_widget_destroy (dialog);
+}
+
+/**
  * Exit the window when exit button is pressed
  */
 void
@@ -281,7 +324,7 @@ exit_clicked_callback (GtkButton *button, gpointer user_data)
   gtk_widget_hide (GTK_WIDGET (user_data));
 }
 
-/*
+/**
  * Exit the application
  */
 gboolean
@@ -292,26 +335,23 @@ delete_event_callback (GtkWidget *widget, GdkEvent *event, gpointer user_data)
   return TRUE;
 }
 
-/*
+/**
  * Delete the tree model contents
  */
 gboolean
 clean_model_callback (GtkTreeModel *model, GtkTreePath *path,
                       GtkTreeIter *iter, gpointer data)
 {
-  ModelNode *node = 0;
+  ModelNode *node;
   gtk_tree_model_get (GTK_TREE_MODEL (model), iter, COL_NODE, &node, -1);
-  if (node)
-    {
-      delete node;
-    }
+  delete node;
   gtk_tree_store_set (GTK_TREE_STORE (model), iter, COL_NODE, (ModelNode*) 0,
                       -1);
   return FALSE;
 }
 
-//     display functions used by default configurator
-/*
+/**************************     display functions used by default configurator **********************/
+/**
  * This function writes data in the second column, this data is going to be editable
  * if it is a NODE_ATTRIBUTE
  */
@@ -320,12 +360,8 @@ cell_data_function_col_1_config_default (GtkTreeViewColumn *col, GtkCellRenderer
                                          GtkTreeModel *model, GtkTreeIter *iter,
                                          gpointer user_data)
 {
-  ModelTypeid *node = 0;
+  ModelTypeid *node;
   gtk_tree_model_get (model, iter, COL_TYPEID, &node, -1);
-  if (!node)
-    {
-      return;
-    }
   if (node->type == ModelTypeid::NODE_ATTRIBUTE)
     {
       g_object_set (renderer, "text", node->defaultValue.c_str (), (char*) 0);
@@ -337,34 +373,29 @@ cell_data_function_col_1_config_default (GtkTreeViewColumn *col, GtkCellRenderer
       g_object_set (renderer, "editable", FALSE, (char*) 0);
     }
 }
-/*
+/**
  * This function writes the attribute or typeid name in the column 0
  */
 void
 cell_data_function_col_0_config_default (GtkTreeViewColumn *col, GtkCellRenderer *renderer, GtkTreeModel *model,
                                          GtkTreeIter *iter, gpointer user_data)
 {
-  ModelTypeid *node = 0;
+  ModelTypeid *node;
   gtk_tree_model_get (model, iter, COL_NODE, &node, -1);
   g_object_set (renderer, "editable", FALSE, (char*) 0);
-  if (!node)
-    {
-      return;
-    }
-
   switch (node->type)
-  {
+    {
     case ModelTypeid::NODE_TYPEID:
       g_object_set (renderer, "text", node->tid.GetName ().c_str (), (char*) 0);
       break;
     case ModelTypeid::NODE_ATTRIBUTE:
       g_object_set (renderer, "text", node->name.c_str (), (char*) 0);
       break;
-  }
+    }
 }
 
 
-/*
+/**
  *  This functions is called whenever there is a change in the value of an attribute
  *  If the input value is ok, it will be updated in the default value and in the
  *  gui, otherwise, it won't be updated in both.
@@ -376,12 +407,8 @@ cell_edited_callback_config_default (GtkCellRendererText *cell, gchar *path_stri
   GtkTreeModel *model = GTK_TREE_MODEL (user_data);
   GtkTreeIter iter;
   gtk_tree_model_get_iter_from_string (model, &iter, path_string);
-  ModelTypeid *node = 0;
+  ModelTypeid *node;
   gtk_tree_model_get (model, &iter, COL_NODE, &node, -1);
-  if (!node)
-    {
-      return;
-    }
   NS_ASSERT (node->type == ModelTypeid::NODE_ATTRIBUTE);
   if (Config::SetDefaultFailSafe (node->tid.GetAttributeFullName (node->index),StringValue (new_text)))
     {
@@ -389,12 +416,12 @@ cell_edited_callback_config_default (GtkCellRendererText *cell, gchar *path_stri
     }
 }
 
-/*
+/**
  * This function is used to display a tooltip whenever the user puts the mouse
  * over a type ID or an attribute. It will give the type and the possible values of
  * an attribute value and the type of the object for an attribute object or a
  * typeID object
- *
+
  * \param widget is the display object
  * \param x is the x position
  * \param y is the y position
@@ -421,15 +448,11 @@ cell_tooltip_callback_config_default (GtkWidget *widget, gint x, gint y,
     }
   int col = get_col_number_from_tree_view_column (column);
 
-  ModelTypeid *node = 0;
+  ModelTypeid *node;
   gtk_tree_model_get (model, &iter, COL_NODE, &node, -1);
-  if (!node)
-    {
-      return FALSE;
-    }
 
   switch (node->type)
-  {
+    {
     case ModelTypeid::NODE_TYPEID:
       if (col == 0)
         {
@@ -460,11 +483,11 @@ cell_tooltip_callback_config_default (GtkWidget *widget, gint x, gint y,
         return TRUE;
       }
       break;
-  }
+    }
   return FALSE;
 }
 
-/*
+/**
  * This is the action done when the user presses on the save button.
  * It will save the config to a file.
  *
@@ -474,40 +497,32 @@ cell_tooltip_callback_config_default (GtkWidget *widget, gint x, gint y,
 void
 save_clicked_default (GtkButton *button, gpointer user_data)
 {
-  GtkWindow *parent_window = GTK_WINDOW (user_data);
+  GtkWidget *parent_window = GTK_WIDGET (user_data);
+  GtkWidget *dialog;
 
-  GtkFileChooserNative *native;
-  GtkFileChooser *chooser;
-  GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
-  gint res;
+  dialog = gtk_file_chooser_dialog_new ("Save File", GTK_WINDOW (parent_window), GTK_FILE_CHOOSER_ACTION_SAVE,
+                                        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_SAVE,
+                                        GTK_RESPONSE_ACCEPT, (char *) 0);
+  gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog),
+                                                  TRUE);
 
-  native = gtk_file_chooser_native_new ("Save File",
-                                        parent_window,
-                                        action,
-                                        "_Save",
-                                        "_Cancel");
-  chooser = GTK_FILE_CHOOSER (native);
+  gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), "config.txt");
 
-  gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
-
-  gtk_file_chooser_set_current_name (chooser, ("config-defaults.txt"));
-
-  res = gtk_native_dialog_run (GTK_NATIVE_DIALOG (native));
-  if (res == GTK_RESPONSE_ACCEPT)
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
     {
       char *filename;
 
-      filename = gtk_file_chooser_get_filename (chooser);
+      filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
       RawTextConfigSave config;
       config.SetFilename (filename);
       config.Default ();
       g_free (filename);
     }
 
-  g_object_unref (native);
+  gtk_widget_destroy (dialog);
 }
 
-/*
+/**
  * If the user presses the button load, it will load the config file into memory.
  *
  * \param button (unused)
@@ -516,111 +531,27 @@ save_clicked_default (GtkButton *button, gpointer user_data)
 void
 load_clicked_default (GtkButton *button, gpointer user_data)
 {
-  GtkWindow *parent_window = GTK_WINDOW (user_data);
-  GtkFileChooserNative *native;
-  GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
-  gint res;
+  GtkWidget *parent_window = GTK_WIDGET (user_data);
+  GtkWidget *dialog;
 
-  native = gtk_file_chooser_native_new ("Open File",
-                                        parent_window,
-                                        action,
-                                        "_Open",
-                                        "_Cancel");
+  dialog = gtk_file_chooser_dialog_new ("Open File", GTK_WINDOW (parent_window), GTK_FILE_CHOOSER_ACTION_OPEN,
+                                        GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN,
+                                        GTK_RESPONSE_ACCEPT, (char *) 0);
 
-  res = gtk_native_dialog_run (GTK_NATIVE_DIALOG (native));
-  if (res == GTK_RESPONSE_ACCEPT)
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_ACCEPT)
     {
       char *filename;
-      GtkFileChooser *chooser = GTK_FILE_CHOOSER (native);
-      filename = gtk_file_chooser_get_filename (chooser);
+
+      filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
       RawTextConfigLoad config;
       config.SetFilename (filename);
       config.Default ();
-      g_free (filename);
     }
 
-  g_object_unref (native);
+  gtk_widget_destroy (dialog);
 }
 
-/*
- * This is the action done when the user presses on the save button.
- * It will save the config to a file.
- *
- * \param button (unused)
- * \param user_data
- */
-void
-save_clicked_attribute (GtkButton *button, gpointer user_data)
-{
-  GtkWindow *parent_window = GTK_WINDOW (user_data);
-
-  GtkFileChooserNative *native;
-  GtkFileChooser *chooser;
-  GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
-  gint res;
-
-  native = gtk_file_chooser_native_new ("Save File",
-                                        parent_window,
-                                        action,
-                                        "_Save",
-                                        "_Cancel");
-  chooser = GTK_FILE_CHOOSER (native);
-
-  gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
-
-  gtk_file_chooser_set_current_name (chooser, ("config-attributes.txt"));
-
-  res = gtk_native_dialog_run (GTK_NATIVE_DIALOG (native));
-  if (res == GTK_RESPONSE_ACCEPT)
-    {
-      char *filename;
-
-      filename = gtk_file_chooser_get_filename (chooser);
-      RawTextConfigSave config;
-      config.SetFilename (filename);
-      config.Attributes ();
-      g_free (filename);
-    }
-
-  g_object_unref (native);
-}
-
-/*
- * If the user presses the button load, it will load the config file into memory.
- *
- * \param button (unused)
- * \param user_data
- */
-void
-load_clicked_attribute (GtkButton *button, gpointer user_data)
-{
-  GtkWindow *parent_window = GTK_WINDOW (user_data);
-  GtkFileChooserNative *native;
-  GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
-  gint res;
-
-  native = gtk_file_chooser_native_new ("Open File",
-                                        parent_window,
-                                        action,
-                                        "_Open",
-                                        "_Cancel");
-
-  res = gtk_native_dialog_run (GTK_NATIVE_DIALOG (native));
-  if (res == GTK_RESPONSE_ACCEPT)
-    {
-      char *filename;
-      GtkFileChooser *chooser = GTK_FILE_CHOOSER (native);
-      filename = gtk_file_chooser_get_filename (chooser);
-      RawTextConfigLoad config;
-      config.SetFilename (filename);
-      config.Attributes ();
-      g_free (filename);
-    }
-
-  g_object_unref (native);
-}
-
-/*
+/**
  * This is the main view opening the widget, getting tooltips and drawing the
  * tree of attributes
  */
@@ -636,7 +567,7 @@ create_view_config_default (GtkTreeStore *model)
   g_signal_connect (view, "query-tooltip", (GCallback) cell_tooltip_callback_config_default, 0);
 
   gtk_tree_view_set_grid_lines (GTK_TREE_VIEW (view), GTK_TREE_VIEW_GRID_LINES_BOTH);
-  // gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
+  gtk_tree_view_set_rules_hint (GTK_TREE_VIEW (view), TRUE);
 
   col = gtk_tree_view_column_new ();
   gtk_tree_view_column_set_title (col, "Object Attributes");
@@ -661,19 +592,16 @@ create_view_config_default (GtkTreeStore *model)
   return view;
 }
 
-/*
+/**
  * Delete the tree model contents
  */
 gboolean
 clean_model_callback_config_default (GtkTreeModel *model, GtkTreePath *path,
                                      GtkTreeIter *iter, gpointer data)
 {
-  ModelTypeid *node = 0;
+  ModelTypeid *node;
   gtk_tree_model_get (GTK_TREE_MODEL (model), iter, COL_TYPEID, &node, -1);
-  if (node)
-    {
-      delete node;
-    }
+  delete node;
   gtk_tree_store_set (GTK_TREE_STORE (model), iter, COL_TYPEID, (ModelTypeid*) 0, -1);
   return FALSE;
 }

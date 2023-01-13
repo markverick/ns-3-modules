@@ -89,6 +89,14 @@ MobilityBuildingInfo::IsIndoor (void)
   return m_indoor;
 }
 
+bool
+MobilityBuildingInfo::IsOutdoor (void)
+{
+  NS_LOG_FUNCTION (this);
+  bool isIndoor = IsIndoor ();
+  return (!isIndoor);
+}
+
 void
 MobilityBuildingInfo::SetIndoor (Ptr<Building> building, uint8_t nfloor, uint8_t nroomx, uint8_t nroomy)
 {

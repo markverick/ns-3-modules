@@ -82,26 +82,21 @@ public:
    * center frequency of the adjacent lower (resp. upper) band.
    *
    * @param centerFreqs the vector of center frequencies.
+   *
+   * @return
    */
-  SpectrumModel (const std::vector<double>& centerFreqs);
+  SpectrumModel (std::vector<double> centerFreqs);
 
 
   /**
-   * This constructs a SpectrumModel based on the explicit values of
+   * This construct a SpectrumModel based on the explicit values of
    * center frequencies and boundaries of each subband.
    *
-   * @param bands the vector of bands for this model
-   */
-  SpectrumModel (const Bands& bands);
-
-  /**
-   * This constructs a SpectrumModel based on the explicit values of
-   * center frequencies and boundaries of each subband. This is used
-   * if <i>bands</i> is an rvalue.
+   * @param bands
    *
-   * @param bands the vector of bands for this model
+   * @return
    */
-  SpectrumModel (Bands&& bands);
+  SpectrumModel (Bands bands);
 
   /**
    *
@@ -118,14 +113,10 @@ public:
 
   /**
    * Const Iterator to the model Bands container start.
-   *
-   * @return a const iterator to the start of the vector of bands
    */
   Bands::const_iterator Begin () const;
   /**
    * Const Iterator to the model Bands container end.
-   *
-   * @return a const iterator to past-the-end of the vector of bands
    */
   Bands::const_iterator End () const;
 

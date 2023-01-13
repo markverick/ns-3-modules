@@ -622,7 +622,8 @@ private:
    */
   bool UpdateDuplicate (Ptr<const Packet> p, const Ipv4Header &header);
   /**
-   * Remove expired duplicates packet entry
+   * Remove duplicate packet entry
+   * \param [in] iter Iterator into duplicate map to remove
    */
   void RemoveDuplicates (void);
 

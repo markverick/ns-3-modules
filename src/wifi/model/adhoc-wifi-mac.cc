@@ -23,9 +23,10 @@
 #include "ns3/log.h"
 #include "ns3/packet.h"
 #include "adhoc-wifi-mac.h"
-#include "ns3/ht-capabilities.h"
-#include "ns3/vht-capabilities.h"
-#include "ns3/he-capabilities.h"
+#include "ht-capabilities.h"
+#include "vht-capabilities.h"
+#include "he-capabilities.h"
+#include "mac-low.h"
 
 namespace ns3 {
 
@@ -137,7 +138,7 @@ AdhocWifiMac::Enqueue (Ptr<Packet> packet, Mac48Address to)
       hdr.SetNoOrder (); // explicitly set to 0 for the time being since HT control field is not yet implemented (set it to 1 when implemented)
     }
   hdr.SetAddr1 (to);
-  hdr.SetAddr2 (GetAddress ());
+  hdr.SetAddr2 (m_low->GetAddress ());
   hdr.SetAddr3 (GetBssid ());
   hdr.SetDsNotFrom ();
   hdr.SetDsNotTo ();

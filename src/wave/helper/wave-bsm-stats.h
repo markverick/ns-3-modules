@@ -51,6 +51,7 @@ class WaveBsmStats : public Object
 public:
   /**
    * \brief Constructor
+   * \return none
    */
   WaveBsmStats ();
 
@@ -62,6 +63,7 @@ public:
   
   /**
    * \brief Increments the count of transmitted packets
+   * \return none
    */
   void IncTxPktCount ();
 
@@ -105,12 +107,14 @@ public:
    * though they may not be physically received (due to collisions
    * or receiver power thresholds).
    * \param index index for statistics
+   * \return none
    */
   void IncExpectedRxPktCount (int index);
 
   /**
    * \brief Increments the count of actual packets received
    * (regardless of coverage area).
+   * \return none
    */
   void IncRxPktCount ();
 
@@ -121,6 +125,7 @@ public:
    * delivery ratio (PDR), we need to count only those received packets
    * that are actually received within the (circular) coverage area.
    * \param index index for statistics
+   * \return none
    */
   void IncRxPktInRangeCount (int index);
 
@@ -148,6 +153,7 @@ public:
    * \brief Sets the count of packets expected to received
    * \param index index for statistics
    * \param count the count of packets
+   * \return none
    */
   void SetExpectedRxPktCount (int index, int count);
 
@@ -155,6 +161,7 @@ public:
    * \brief Sets the count of packets within range that are received
    * \param index index for statistics
    * \param count the count of packets
+   * \return none
    */
   void SetRxPktInRangeCount (int index, int count);
 
@@ -162,18 +169,21 @@ public:
    * \brief Resets the count of total packets
    * expected and/or within range(index) that are received
    * \param index index for statistics
+   * \return none
    */
   void ResetTotalRxPktCounts (int index);
 
   /**
    * \brief Sets the count of packets transmitted
    * \param count the count of packets transmitted
+   * \return none
    */
   void SetTxPktCount (int count);
 
   /**
    * \brief Sets the count of packets received
    * \param count the count of packets received
+   * \return none
    */
   void SetRxPktCount (int count);
 
@@ -181,6 +191,7 @@ public:
    * \brief Increments the count of (application data) bytes transmitted
    * not including MAC/PHY overhead
    * \param bytes the bytes of application-data transmitted
+   * \return none
    */
   void IncTxByteCount (int bytes);
 
@@ -212,6 +223,7 @@ public:
   /**
    * \brief Enables/disables logging
    * \param log
+   * \return none
    */
   void SetLogging (int log);
 

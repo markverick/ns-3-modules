@@ -26,7 +26,6 @@
 #include "ns3/simulator.h"
 #include "ns3/attribute-construction-list.h"
 #include "ns3/enum.h"
-#include "ns3/boolean.h"
 #include "ns3/config-store-config.h"
 #ifdef HAVE_LIBXML2
 #include "xml-config.h"
@@ -69,11 +68,6 @@ ConfigStore::GetTypeId (void)
                    MakeEnumAccessor (&ConfigStore::SetFileFormat),
                    MakeEnumChecker (ConfigStore::RAW_TEXT, "RawText",
                                     ConfigStore::XML, "Xml"))
-    .AddAttribute ("SaveDeprecated",
-                   "Save DEPRECATED attributes",
-                   BooleanValue (true),
-                   MakeBooleanAccessor (&ConfigStore::SetSaveDeprecated),
-                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -135,8 +129,6 @@ ConfigStore::ConfigStore ()
         }
     }
   m_file->SetFilename (m_filename);
-  m_file->SetSaveDeprecated (m_saveDeprecated);
-
   NS_LOG_FUNCTION (this << ": format: " << m_fileFormat
                 << ", mode: " << m_mode
                 << ", file name: " << m_filename);
@@ -166,12 +158,6 @@ ConfigStore::SetFilename (std::string filename)
 {
   NS_LOG_FUNCTION (this << filename);
   m_filename = filename;
-}
-void
-ConfigStore::SetSaveDeprecated (bool saveDeprecated)
-{
-  NS_LOG_FUNCTION (this << saveDeprecated);
-  m_saveDeprecated = saveDeprecated;
 }
 
 void 

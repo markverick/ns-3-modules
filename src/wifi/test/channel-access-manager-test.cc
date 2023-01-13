@@ -21,8 +21,8 @@
 #include "ns3/test.h"
 #include "ns3/simulator.h"
 #include "ns3/channel-access-manager.h"
-#include "ns3/frame-exchange-manager.h"
 #include "ns3/qos-txop.h"
+#include "ns3/mac-low.h"
 
 using namespace ns3;
 
@@ -58,20 +58,8 @@ private:
   /// allow ChannelAccessManagerTest class access
   friend class ChannelAccessManagerTest<TxopType>;
 
-  /// \copydoc ns3::Txop::DoDispose
-  void DoDispose (void) override;
-  /// \copydoc ns3::Txop::NotifyChannelAccessed
-  void NotifyChannelAccessed (Time txopDuration = Seconds (0)) override;
-  /// \copydoc ns3::Txop::HasFramesToTransmit
-  bool HasFramesToTransmit (void) override;
-  /// \copydoc ns3::Txop::NotifyChannelSwitching
-  void NotifyChannelSwitching (void) override;
-  /// \copydoc ns3::Txop::NotifySleep
-  void NotifySleep (void) override;
-  /// \copydoc ns3::Txop::NotifyWakeUp
-  void NotifyWakeUp (void) override;
-  /// \copydoc ns3::Txop::GenerateBackoff
-  void GenerateBackoff (void) override;
+  /// Inherited
+  void DoDispose (void);
 
   typedef std::pair<uint64_t,uint64_t> ExpectedGrant; //!< the expected grant typedef
   typedef std::list<ExpectedGrant> ExpectedGrants; //!< the collection of expected grants typedef
@@ -88,114 +76,72 @@ private:
   ExpectedGrants m_expectedGrants; //!< expected grants
 
   /**
+   * \returns true if access has been requested for this function and
+   *          has not been granted already, false otherwise.
+   */
+  bool IsAccessRequested (void) const;
+  /**
+   * Notify that access request has been received.
+   */
+  void NotifyAccessRequested (void);
+  /**
+   * Notify the Txop that access has been granted.
+   */
+  void NotifyAccessGranted (void);
+  /**
+   * Notify the Txop that internal collision has occurred.
+   */
+  void NotifyInternalCollision (void);
+  /**
+   * Generate a new backoff now.
+   */
+  void GenerateBackoff (void);
+  /**
    * Check if the Txop has frames to transmit.
    * \return true if the Txop has frames to transmit.
    */
+  bool HasFramesToTransmit (void);
+  /**
+   * When a channel switching occurs, enqueued packets are removed.
+   */
+  void NotifyChannelSwitching (void);
+  /**
+   * When sleep operation occurs, if there is a pending packet transmission,
+   * it will be reinserted to the front of the queue.
+   */
+  void NotifySleep (void);
+  /**
+   * When wake up operation occurs, channel access will be restarted.
+   */
+  void NotifyWakeUp (void);
 
   ChannelAccessManagerTest<TxopType> *m_test; //!< the test DCF/EDCA manager
   uint32_t m_i; //!< the index of the Txop
+  bool m_accessRequested; //!< true if access requested
 };
 
 /**
  * \ingroup wifi-test
  * \ingroup tests
  *
- * \brief ChannelAccessManager Stub
+ * \brief Mac Low Stub
  */
-class ChannelAccessManagerStub : public ChannelAccessManager
+class MacLowStub : public MacLow
 {
 public:
-  ChannelAccessManagerStub ()
+  MacLowStub ()
   {
   }
   /**
-   * Set the Short Interframe Space (SIFS).
+   * This function indicates whether Simulator::Now is in the CF period.
    *
-   * \param sifs the SIFS duration
+   * \return true if Simulator::Now is in CF period,
+   *         false otherwise
    */
-  void SetSifs (Time sifs)
+  bool IsCfPeriod (void) const
   {
-    m_sifs = sifs;
+    return false;
   }
-  /**
-   * Set the slot duration.
-   *
-   * \param slot the slot duration
-   */
-  void SetSlot (Time slot)
-  {
-    m_slot = slot;
-  }
-  /**
-   * Set the duration of EIFS - DIFS
-   *
-   * \param eifsNoDifs the duration of EIFS - DIFS
-   */
-  void SetEifsNoDifs (Time eifsNoDifs)
-  {
-    m_eifsNoDifs = eifsNoDifs;
-  }
-
-private:
-  Time GetSifs (void) const override
-  {
-    return m_sifs;
-  }
-
-  Time GetSlot (void) const override
-  {
-    return m_slot;
-  }
-
-  Time GetEifsNoDifs (void) const override
-  {
-    return m_eifsNoDifs;
-  }
-
-  Time m_slot;        //!< slot duration
-  Time m_sifs;        //!< SIFS duration
-  Time m_eifsNoDifs;  //!< EIFS duration minus a DIFS
-};
-
-/**
- * \ingroup wifi-test
- * \ingroup tests
- *
- * \brief Frame Exchange Manager Stub
- */
-template <typename TxopType>
-class FrameExchangeManagerStub : public FrameExchangeManager
-{
-public:
-  /**
-   * Constructor
-   *
-   * \param test the test channel access manager
-   */
-  FrameExchangeManagerStub (ChannelAccessManagerTest<TxopType> *test)
-    : m_test (test)
-  {
-  }
-  /**
-   * Request the FrameExchangeManager to start a frame exchange sequence.
-   *
-   * \param dcf the channel access function that gained channel access. It is
-   *            the DCF on non-QoS stations and an EDCA on QoS stations.
-   * \return true if a frame exchange sequence was started, false otherwise
-   */
-  bool StartTransmission (Ptr<Txop> dcf) override
-  {
-    dcf->NotifyChannelAccessed ();
-    return true;
-  }
-  /// \copydoc ns3::FrameExchangeManager::NotifyInternalCollision
-  void NotifyInternalCollision (Ptr<Txop> txop) override
-  {
-    m_test->NotifyInternalCollision (DynamicCast<TxopTest<TxopType>> (txop));
-  }
-
-private:
-  ChannelAccessManagerTest<TxopType> *m_test; //!< the test DCF/EDCA manager
 };
 
 /**
@@ -209,7 +155,7 @@ class ChannelAccessManagerTest : public TestCase
 {
 public:
   ChannelAccessManagerTest ();
-  void DoRun (void) override;
+  virtual void DoRun (void);
 
   /**
    * Notify access granted function
@@ -218,9 +164,9 @@ public:
   void NotifyAccessGranted (uint32_t i);
   /**
    * Notify internal collision function
-   * \param state the Txop
+   * \param i the index of the Txop
    */
-  void NotifyInternalCollision (Ptr<TxopTest<TxopType>> state);
+  void NotifyInternalCollision (uint32_t i);
   /**
    * Generate backoff function
    * \param i the index of the Txop
@@ -378,8 +324,8 @@ private:
 
   typedef std::vector<Ptr<TxopTest<TxopType>>> TxopTests; //!< the TXOP tests typedef
 
-  Ptr<FrameExchangeManagerStub<TxopType>> m_feManager; //!< the Frame Exchange Manager stubbed
-  Ptr<ChannelAccessManagerStub> m_ChannelAccessManager; //!< the channel access manager
+  Ptr<MacLowStub> m_low; //!< the MAC low stubbed
+  Ptr<ChannelAccessManager> m_ChannelAccessManager; //!< the channel access manager
   TxopTests m_txop; //!< the vector of Txop test instances
   uint32_t m_ackTimeoutValue; //!< the Ack timeout value
 };
@@ -394,7 +340,8 @@ TxopTest<TxopType>::QueueTx (uint64_t txTime, uint64_t expectedGrantTime)
 template <typename TxopType>
 TxopTest<TxopType>::TxopTest (ChannelAccessManagerTest<TxopType> *test, uint32_t i)
   : m_test (test),
-    m_i (i)
+    m_i (i),
+    m_accessRequested (false)
 {
 }
 
@@ -403,15 +350,36 @@ void
 TxopTest<TxopType>::DoDispose (void)
 {
   m_test = 0;
-  TxopType::DoDispose ();
+  Txop::DoDispose ();
+}
+
+template <typename TxopType>
+bool
+TxopTest<TxopType>::IsAccessRequested (void) const
+{
+  return m_accessRequested;
 }
 
 template <typename TxopType>
 void
-TxopTest<TxopType>::NotifyChannelAccessed (Time txopDuration)
+TxopTest<TxopType>::NotifyAccessRequested (void)
 {
-  Txop::m_access = Txop::NOT_REQUESTED;
+  m_accessRequested = true;
+}
+
+template <typename TxopType>
+void
+TxopTest<TxopType>::NotifyAccessGranted (void)
+{
+  m_accessRequested = false;
   m_test->NotifyAccessGranted (m_i);
+}
+
+template <typename TxopType>
+void
+TxopTest<TxopType>::NotifyInternalCollision (void)
+{
+  m_test->NotifyInternalCollision (m_i);
 }
 
 template <typename TxopType>
@@ -480,8 +448,9 @@ ChannelAccessManagerTest<TxopType>::AddTxEvt (uint64_t at, uint64_t duration)
 
 template <typename TxopType>
 void
-ChannelAccessManagerTest<TxopType>::NotifyInternalCollision (Ptr<TxopTest<TxopType>> state)
+ChannelAccessManagerTest<TxopType>::NotifyInternalCollision (uint32_t i)
 {
+  Ptr<TxopTest<TxopType>> state = m_txop[i];
   NS_TEST_EXPECT_MSG_EQ (state->m_expectedInternalCollision.empty (), false, "Have expected internal collisions");
   if (!state->m_expectedInternalCollision.empty ())
     {
@@ -518,7 +487,7 @@ ChannelAccessManagerTest<TxopType>::NotifyChannelSwitching (uint32_t i)
       state->m_expectedGrants.pop_front ();
       NS_TEST_EXPECT_MSG_EQ (Simulator::Now (), MicroSeconds (expected.second), "Expected grant is now");
     }
-  state->Txop::m_access = Txop::NOT_REQUESTED;
+  state->m_accessRequested = false;
 }
 
 template <typename TxopType>
@@ -562,9 +531,11 @@ template <typename TxopType>
 void
 ChannelAccessManagerTest<TxopType>::StartTest (uint64_t slotTime, uint64_t sifs, uint64_t eifsNoDifsNoSifs, uint32_t ackTimeoutValue)
 {
-  m_ChannelAccessManager = CreateObject<ChannelAccessManagerStub> ();
-  m_feManager = CreateObject<FrameExchangeManagerStub<TxopType>> (this);
-  m_ChannelAccessManager->SetupFrameExchangeManager (m_feManager);
+  m_ChannelAccessManager = CreateObject<ChannelAccessManager> ();
+  m_low = CreateObject<MacLowStub> ();
+  m_low->SetSlotTime (MicroSeconds (slotTime));
+  m_low->SetSifs (MicroSeconds (sifs));
+  m_ChannelAccessManager->SetupLow (m_low);
   m_ChannelAccessManager->SetSlot (MicroSeconds (slotTime));
   m_ChannelAccessManager->SetSifs (MicroSeconds (sifs));
   m_ChannelAccessManager->SetEifsNoDifs (MicroSeconds (eifsNoDifsNoSifs + sifs));
@@ -579,6 +550,7 @@ ChannelAccessManagerTest<TxopType>::AddTxop (uint32_t aifsn)
   txop->SetAifsn (aifsn);
   m_txop.push_back (txop);
   txop->SetChannelAccessManager (m_ChannelAccessManager);
+  txop->SetMacLow (m_low);
 }
 
 template <typename TxopType>
@@ -586,6 +558,7 @@ void
 ChannelAccessManagerTest<TxopType>::EndTest (void)
 {
   Simulator::Run ();
+  Simulator::Destroy ();
 
   for (typename TxopTests::const_iterator i = m_txop.begin (); i != m_txop.end (); i++)
     {
@@ -598,10 +571,8 @@ ChannelAccessManagerTest<TxopType>::EndTest (void)
     }
   m_txop.clear ();
 
-  m_ChannelAccessManager->Dispose ();
   m_ChannelAccessManager = 0;
-  m_feManager = 0;
-  Simulator::Destroy ();
+  m_low = 0;
 }
 
 template <typename TxopType>
@@ -1111,7 +1082,7 @@ ChannelAccessManagerTest<QosTxop>::DoRun (void)
   StartTest (4, 6, 10);
   AddTxop (1);
   AddRxOkEvt (20, 30);
-  AddAccessRequest (58, 20, 60, 0);
+  AddAccessRequest (52, 20, 60, 0);
   EndTest ();
 
   // Check alignment at slot boundary after successful reception (backoff = 0):

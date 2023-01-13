@@ -402,11 +402,6 @@ Ipv4GlobalRouting::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Uni
 {
   NS_LOG_FUNCTION (this << stream);
   std::ostream* os = stream->GetStream ();
-  // Copy the current ostream state
-  std::ios oldState (nullptr);
-  oldState.copyfmt (*os);
-
-  *os << std::resetiosflags (std::ios::adjustfield) << std::setiosflags (std::ios::left);
 
   *os << "Node: " << m_ipv4->GetObject<Node> ()->GetId ()
       << ", Time: " << Now().As (unit)
@@ -421,11 +416,11 @@ Ipv4GlobalRouting::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Uni
           std::ostringstream dest, gw, mask, flags;
           Ipv4RoutingTableEntry route = GetRoute (j);
           dest << route.GetDest ();
-          *os << std::setw (16) << dest.str ();
+          *os << std::setiosflags (std::ios::left) << std::setw (16) << dest.str ();
           gw << route.GetGateway ();
-          *os << std::setw (16) << gw.str ();
+          *os << std::setiosflags (std::ios::left) << std::setw (16) << gw.str ();
           mask << route.GetDestNetworkMask ();
-          *os << std::setw (16) << mask.str ();
+          *os << std::setiosflags (std::ios::left) << std::setw (16) << mask.str ();
           flags << "U";
           if (route.IsHost ())
             {
@@ -435,7 +430,7 @@ Ipv4GlobalRouting::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Uni
             {
               flags << "G";
             }
-          *os << std::setw (6) << flags.str ();
+          *os << std::setiosflags (std::ios::left) << std::setw (6) << flags.str ();
           // Metric not implemented
           *os << "-" << "      ";
           // Ref ct not implemented
@@ -454,8 +449,6 @@ Ipv4GlobalRouting::PrintRoutingTable (Ptr<OutputStreamWrapper> stream, Time::Uni
         }
     }
   *os << std::endl;
-  // Restore the previous ostream state
-  (*os).copyfmt (oldState);
 }
 
 Ptr<Ipv4Route>

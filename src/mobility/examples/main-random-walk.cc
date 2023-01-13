@@ -21,13 +21,8 @@
 
 using namespace ns3;
 
-/**
- * Function called when there is a course change
- * \param context event context
- * \param mobility a pointer to the mobility model
- */
 static void 
-CourseChange (std::string context, Ptr<const MobilityModel> mobility)
+CourseChange (std::string foo, Ptr<const MobilityModel> mobility)
 {
   Vector pos = mobility->GetPosition ();
   Vector vel = mobility->GetVelocity ();

@@ -21,7 +21,7 @@
 namespace ns3 {
 
 void
-TcpTxItem::Print (std::ostream &os, Time::Unit unit /* = Time::S */) const
+TcpTxItem::Print (std::ostream &os) const
 {
   bool comma = false;
   os << "[" << m_startSeq << ";" << m_startSeq + GetSeqSize () << "|"
@@ -55,7 +55,7 @@ TcpTxItem::Print (std::ostream &os, Time::Unit unit /* = Time::S */) const
     {
       os << ",";
     }
-  os << "[" << m_lastSent.As (unit) << "]";
+  os << "[" << m_lastSent.GetSeconds () << "]";
 }
 
 uint32_t

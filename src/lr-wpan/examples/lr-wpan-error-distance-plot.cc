@@ -54,15 +54,10 @@
 using namespace ns3;
 using namespace std;
 
-static uint32_t g_received = 0; //!< number of packets received
+static uint32_t g_received = 0;
 
 NS_LOG_COMPONENT_DEFINE ("LrWpanErrorDistancePlot");
 
-/**
- * Function called when a Data indication is invoked
- * \param params MCPS data indication parameters
- * \param p packet
- */
 static void
 LrWpanErrorDistanceCallback (McpsDataIndicationParams params, Ptr<Packet> p)
 {
